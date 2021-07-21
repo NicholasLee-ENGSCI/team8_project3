@@ -1,5 +1,5 @@
 
-# imports 
+# import
 from matplotlib import pyplot as plt    # MATPLOTLIB is THE plotting module for Python
 import numpy as np
 
