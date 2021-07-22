@@ -8,7 +8,8 @@ The internal pressure of the Waikate geothermal field is slowly recovering thank
 
 
 How? - Try to identify why and how a computer model could be useful. 
-
+A computer could be used to model how each of the different propused solutions would effect the health of the geothermal field. 
+These models could be used to make an informed decision on which solution is best for the geothermal well
 
 Given? - What data has been given? What data do you think you will need to look up? 
 
