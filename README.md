@@ -9,19 +9,20 @@ The internal pressure of the Waikate geothermal field is slowly recovering thank
 
 How? - Try to identify why and how a computer model could be useful. 
 
-A computer could be used to model how each of the different propused solutions would effect the health of the geothermal field. 
-These models could be used to make an informed decision on which solution is best for the geothermal well
 
 Given? - What data has been given? What data do you think you will need to look up? 
 
-We have been given data recording the water level and temperature of boreholes since the 1950. However we’re missing data on the water level before the closure program began. This is important in order for us to accurately predict what these water levels might look like in the future when, potentially, the program is no longer running. We need a reference point of levels before overproduction occurred.
-
-We also don’t have data on re-injection rate, but it is important to find a correlation between this and the health of the field in order to recommend a model. Pressure data is also not given but the trend of pressure can potentially be inferred from temperature data.
-It might be useful to have the dimensions of the well, as pressure calculations are reliant on volume
-
-
 
 Assume? - conceptual model.
+
+Initial Conditions:
+
+Control Volume: Model with reservoir, water level.
+Physical tings:
+Conservation of mass/heat/darcy's law
+darcy's law defines how water and steam move underground, will need to research more top fully understand this.
+
+
 
 +
 
