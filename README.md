@@ -27,7 +27,7 @@ Initial Conditions:
 
 Control Volume: Model with reservoir, water level, in Whakarewarewa region. 
 Physical tings:
-underlying physics Conservation of mass/heat/darcy's law
+underlying physics laws are Conservation of mass/heat/darcy's law
 darcy's law defines how water and steam move underground, will need to research more top fully understand this.
 
 plot of the data also shows that the production rate is inversely proportional to temperature for time domain before the borehole closure program began in 1986. after production rate stabilised, water level and water level increased.
