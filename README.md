@@ -13,6 +13,9 @@ The three options for resource consent are to maintain the current moratorium, s
 
 How? - Try to identify why and how a computer model could be useful. 
 
+Using the historical data we can model how each of these different solutions would effect the health of the geothermal field, namely the heat and water level. 
+These models could then be used to make an informed decision on which solution is best for the health of geothermal well
+
 
 Given? - What data has been given? What data do you think you will need to look up? 
 
