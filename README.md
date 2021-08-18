@@ -29,7 +29,7 @@ Assume? - conceptual model.
 Initial Conditions:
 
 Control Volume: Model with reservoir, water level, in Whakarewarewa region. 
-Physical tings:
+Physical things:
 underlying physics laws are Conservation of mass/heat/darcy's law
 darcy's law defines how water and steam move underground, will need to research more top fully understand this.
 
