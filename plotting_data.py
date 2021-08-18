@@ -1,5 +1,5 @@
 
-# import
+# imports 
 from matplotlib import pyplot as plt    # MATPLOTLIB is THE plotting module for Python
 import numpy as np
 
@@ -17,13 +17,15 @@ if run_plot1:
     # plotting format 
     f,ax1 = plt.subplots(nrows=1,ncols=1)
     ax2 = ax1.twinx()
-    ax1.plot(tq1, pr1, 'k-', label='Total extraction rate 1')
-    ax1.plot(tq2, pr2, 'b-', label='Total extraction rate 2')
+    ln1 = ax1.plot(tq1, pr1, 'k-', label='Total extraction rate 1')
+    ln2 = ax1.plot(tq2, pr2, 'b-', label='Total extraction rate 2')
+    ln3 = ax2.plot(tp, wl, 'r-', label="water level", markersize = 7)
 
-    ax2.plot(tp, wl, 'r*', markersize = 7)
-    # ax2.set_ylim([0,300])
-    ax1.legend(loc=2)
-    # ax1.set_ylim([0,35000])
+    lns = ln1+ln2+ln3
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns,labs,loc=2)
+
+    # ax1.legend(loc=2)
     ax1.set_ylabel('production rate [tonnes/day]')
     ax2.set_ylabel('water level [m]')
     ax2.set_xlabel('time [yr]')
@@ -31,7 +33,7 @@ if run_plot1:
     ax2.set_title('The influence of borehole closure program on the water level recovery')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+    save_figure = True
     if not save_figure:
         plt.show()
     else:
@@ -48,13 +50,16 @@ if run_plot2:
     # plotting format 
     f,ax1 = plt.subplots(nrows=1,ncols=1)
     ax2 = ax1.twinx()
-    ax1.plot(tq1, pr1, 'k-', label='Total extraction rate 1')
-    ax1.plot(tq2, pr2, 'b-', label='Total extraction rate 2')
-
-    ax2.plot(tT, Temp, 'r*', markersize = 7)
-    # ax2.set_ylim([0,300])
-    ax1.legend(loc=1)
-    # ax1.set_ylim([0,35000])
+    ln1 = ax1.plot(tq1, pr1, 'k-', label='Total extraction rate 1')
+    ln2 = ax1.plot(tq2, pr2, 'b-', label='Total extraction rate 2')
+    # ax1.plot(tT, Temp, 'r*', label='Temperature', markersize = 7)
+    ln3 = ax2.plot(tT, Temp, 'r*', label='Temperature', markersize = 7)
+    
+    lns = ln1+ln2+ln3
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns,labs,loc=1)
+    # ax2.legend(loc=3)
+    # ax1.legend(loc=1)
     ax1.set_ylabel('production rate [tonnes/day]')
     ax2.set_ylabel('Temperature [degC]')
     ax2.set_xlabel('time [yr]')
@@ -62,7 +67,7 @@ if run_plot2:
     ax2.set_title('The influence of borehole closure program on the temperature recovery')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+    save_figure = True
     if not save_figure:
         plt.show()
     else:

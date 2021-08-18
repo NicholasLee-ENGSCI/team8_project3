@@ -1,0 +1,17 @@
+---
+title: "263 report (team 8, project 3)"
+author: "Nicholas Lee 901571339"
+date: "31/07/2021"
+output: pdf_document
+---
+
+
+$$ 
+  $'\frac{dP}{dt}'$=-a_{p}q_{sink}-b_{p}(P-P_{0})-C_{p}\frac{dq_{sink}}{dt},\\ 
+  \begin{align} where &: -a_{p}q_{sink}\ is \ the \ forcing \ term, \\
+                    &\ \ -b_{p}(P-P_{0}) \ is \ the \ restoring \ term, \\
+                    &\ \  -C_{p}\frac{dq_{sink}}{dt} \ is \ the \ slow \ drainage
+                              
+ 
+  \end{align}
+$$
