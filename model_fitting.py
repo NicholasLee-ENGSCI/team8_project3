@@ -9,37 +9,6 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.interpolate import interp1d
 
-def IMPROVED_EULER_STEP_pressure(f, tk, yk, h, q, dqdt, pars):
-    """ Calculate value of a single Improved Euler step
-
-    Parameters
-	----------
-	f : callable
-		Derivative function
-	tk : float
-		Independent variable at beginning of step
-	yk : float
-		Solution at beginning of step
-	h : float
-		Step size
-	pars : iterable
-		Optional parameters to pass to derivative function
-
-	Returns
-	-------
-	N/A : float
-		Solution at end of the improved Euler step.
-    """
-    
-    #calculating the first derivative evaluation
-    fk = f(tk, yk, q, dqdt, *pars)
-
-    #calculating the second derivative evaulation
-    fk1 = f(tk + h, yk + h*fk, q, dqdt, *pars)
-
-    #return stepped improved euler value
-    return yk + h*((fk + fk1)/2)
-
 def interpolate_q_total(t):
     ''' interplate two extraction rates to find the total extraction rate, q.
 
@@ -290,7 +259,7 @@ if __name__ == "__main__":
 
 
     a = 0.4
-    b = 0.7
+    b = 0.5
     c = 0.1
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, c, x0])
