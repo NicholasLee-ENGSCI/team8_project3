@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy.interpolate import interp1d
 
-def IMPROVED_EULER_STEP(f, tk, yk, h, q, pars):
+def IMPROVED_EULER_STEP(f, tk, yk, h, pars):
     """ Calculate value of a single Improved Euler step
 
     Parameters
@@ -32,10 +32,10 @@ def IMPROVED_EULER_STEP(f, tk, yk, h, q, pars):
     """
     
     #calculating the first derivative evaluation
-    fk = f(tk, yk, q, *pars)
+    fk = f(tk, yk, *pars)
 
     #calculating the second derivative evaulation
-    fk1 = f(tk + h, yk + h*fk, q, *pars)
+    fk1 = f(tk + h, yk + h*fk, *pars)
 
     #return stepped improved euler value
     return yk + h*((fk + fk1)/2)
@@ -135,18 +135,60 @@ def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):
     # the first derivative returns dP/dt = -a*q-b*(P-P0)-c*dqdt where all the parameters are provided as inputs 
     return -ap*q-b*(P-P0)-c*dqdt
 
-def solve_pressure_ode(f,t, pars):
-    '''
+def solve_pressure_ode(f,t, dt, x0, pars):
+    '''Solve the pressure ODE numerically.
+        
+        Parameters:
+        -----------
+        f : callable
+            Function that returns dxdt given variable and parameter inputs.
+        t : array-like
+            time of solution.
+        dt : float
+            Time step length.
+        x0 : float
+            Initial value of solution.
+        pars : array-like
+            List of parameters passed to ODE function f.
+
+        Returns:
+        --------
+        t : array-like
+            Independent variable solution vector.
+        x : array-like
+            Dependent variable solution vector.
+
+        Notes:
+        ------
+        ODE should be solved using the Improved Euler Method. 
+
+        Function q(t) should be hard coded within this method. Create duplicates of 
+        solve_ode for models with different q(t).
+
+        Assume that ODE function f takes the following inputs, in order:
+            1. independent variable
+            2. dependent variable
+            3. forcing term, q
+            4. all other parameters
     '''
     
-    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)
-    q = interpolate_q_total(t)
-
-    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)
+    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
+    q = interpolate_q_total(t)                                                                                                                                              #{writing this function generalictaly to it can be used for temperature ode also}
+                                                                                                                                                                            #{what is order of parameters?}
+    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
     dqdt = dqdt_function(t,q)
 
+    nt = int(np.ceil((t[-1]-t[0])/dt))	#number of steps	
+    ts = t[0]+np.arange(nt+1)*dt		    #x/t array
+    ys = 0.*ts						    #array to store solution values
+    ys[0] = x0						    #set initial value of solution array
+
+    #calculate solution values using Improved Euler 
+    for i in range(nt):
+        ys[i+1] = IMPROVED_EULER_STEP(f, ts[i], ys[i], dt, pars)
     
-    return
+	#Return both arrays contained calculated values
+    return ts, ys
 
 def plot_pressure_model(t,y):
     '''
