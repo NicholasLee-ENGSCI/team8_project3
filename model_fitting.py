@@ -92,7 +92,7 @@ def dqdt_function(t,q):
     dqdt.append(a)
     return dqdt
 
-def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):
+def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???
     ''' Return the derivative dP/dt at time, t, for given parameters.
 
         Parameters:
@@ -106,13 +106,13 @@ def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):
         dqdt : float
             rate of change of total extraction rate. 
         ap : float
-           extraction strength parameter.
+            extraction strength parameter.
         b : float
             recharge strength parameter.
         c : float
             slow drainage strength parameter. 
         P0 : float
-            initial value of the dependent variable.
+            Ambient value of the dependent variable.
 
         Returns:
         --------
@@ -173,24 +173,24 @@ def solve_pressure_ode(f,t, dt, x0, pars):
     '''
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t)                                                                                                                                              #{writing this function generalictaly to it can be used for temperature ode also}
+    #q = interpolate_q_total(t)                                                                                                                                              #{writing this function generalictaly so it can be used for temperature ode also, move this out of function}
                                                                                                                                                                             #{what is order of parameters?}
     # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
-    dqdt = dqdt_function(t,q)
+    #dqdt = dqdt_function(t,q)
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#number of steps	
     ts = t[0]+np.arange(nt+1)*dt		    #x/t array
     ys = 0.*ts						    #array to store solution values
     ys[0] = x0						    #set initial value of solution array
 
-    #calculate solution values using Improved Euler 
+    #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
         ys[i+1] = IMPROVED_EULER_STEP(f, ts[i], ys[i], dt, pars)
     
 	#Return both arrays contained calculated values
     return ts, ys
 
-def plot_pressure_model(t,y):
+def plot_pressure_model(t,y):       #{could rewrite this genericaly later and include labels as parameters??? otherwise is a redundant function atm, good for now}
     '''
     '''
     # plotting format 
@@ -264,8 +264,22 @@ def temperature_ode_model(t, T, at, bp, ap, bt, P, P0, Tx, T0):
 
 if __name__ == "__main__":
     tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
-    a = interpolate_q_total(tp)
+    qtot = interpolate_q_total(tp)
     # total extraction rate 
-    plot_pressure_model(tp,a)
+    plot_pressure_model(tp,qtot)
     # total rate of change of extraction rate 
-    plot_pressure_model(tp,dqdt_function(tp,a))
+    plot_pressure_model(tp,dqdt_function(tp,qtot))
+
+    #for nick
+    #I've begun the process of rewriting our solver and plotter code to be generic so it could be used for both the pressure and temperature to save us time in the long run
+    #I've placed my thoughts and things we can come back and fix inbetween {} all over the code
+    #{this is an example}
+
+    #Shalin's generic ode solver testing, this would be moved to a main script eventually
+    q = interpolate_q_total(tp)         
+    dqdt = dqdt_function(tp,q)
+
+    dt = 365      #what is out step size days years?
+    x0 = 
+
+    timei, Tempi = solve_pressure_ode(pressure_ode_model, tp, dt, x0, q, pars=[dqdt, q, a, b, c, x0])
