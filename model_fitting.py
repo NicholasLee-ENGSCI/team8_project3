@@ -61,7 +61,7 @@ def dqdt_function(t,q):
     dqdt.append(a)
     return dqdt
 
-def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
+def pressure_ode_model(t, P, q, dqdt, ap, bp, cp, P0):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
     ''' Return the derivative dP/dt at time, t, for given parameters.
 
         Parameters:
@@ -102,7 +102,7 @@ def pressure_ode_model(t, P, q, dqdt, ap, b, c, P0):            #{remember to ch
     '''
 
     # the first derivative returns dP/dt = -a*q-b*(P-P0)-c*dqdt where all the parameters are provided as inputs 
-    return -ap*q-b*(P-P0)-c*dqdt
+    return -ap*q-bp*(P-P0)-cp*dqdt
 
 def solve_pressure_ode(f,t, dt, x0, pars):
     '''Solve the pressure ODE numerically.
@@ -154,6 +154,7 @@ def solve_pressure_ode(f,t, dt, x0, pars):
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
+
 
         fk = f(ts[i], ys[i], q[i], dqdt[i], *pars)
 
@@ -235,34 +236,109 @@ def temperature_ode_model(t, T, at, bp, ap, bt, P, P0, Tx, T0):
         Tx = 30 # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
     
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
-    return -at*bp*(1/ap)*(Tx-T)-bt*(T-T0)
+    return -at*(bp/ap)*(P-P0)*(Tx-T)-bt*(T-T0)                                                                                           #{cancel to 0 if pressure makes Tx = T}
 
+
+def solve_temperature_ode(f,t, dt, x0, pars):
+    '''Solve the temperature ODE numerically.
+        
+        Parameters:
+        -----------
+        f : callable
+            Function that returns dxdt given variable and parameter inputs.
+        t : array-like
+            time of solution.
+        dt : float
+            Time step length.
+        x0 : float
+            Initial value of solution.
+        pars : array-like
+            List of parameters passed to ODE function f.
+
+        Returns:
+        --------
+        t : array-like
+            Independent variable solution vector.
+        x : array-like
+            Dependent variable solution vector.
+
+        Notes:
+        ------
+        ODE should be solved using the Improved Euler Method. 
+
+        Function q(t) should be hard coded within this method. Create duplicates of 
+        solve_ode for models with different q(t).
+
+        Assume that ODE function f takes the following inputs, in order:
+            1. independent variable
+            2. dependent variable
+            3. forcing term, q
+            4. all other parameters
+    '''
+    
+    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
+    q = interpolate_q_total(t)                                                                                                                                             
+                                                                                                                                                                            #{what is order of parameters?}
+    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
+    dqdt = dqdt_function(t,q)
+
+    nt = int(np.ceil((t[-1]-t[0])/dt))	    #number of steps	
+    ts = t[0]+np.arange(nt+1)*dt		    #x/t array
+    ys = 0.*ts						        #array to store solution values
+    ys[0] = x0						        #set initial value of solution array
+
+    #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
+    for i in range(nt):
+
+
+        fk = f(ts[i], ys[i], q[i], dqdt[i], *pars)
+
+        #calculating the second derivative evaulation
+        fk1 = f(ts[i] + dt, ys[i] + dt*fk, q[i], dqdt[i], *pars)
+
+        #return stepped improved euler value
+        ys[i+1] = ys[i] + dt*((fk + fk1)/2)
+    
+	#Return both arrays contained calculated values
+    return ts, ys
 
 if __name__ == "__main__":
     tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
     qtot = interpolate_q_total(tp)
-    # total extraction rate 
+    #total extraction rate 
     #plot_pressure_model(tp,qtot)
-    # total rate of change of extraction rate 
+    #total rate of change of extraction rate 
     #plot_pressure_model(tp,dqdt_function(tp,qtot))
 
-    #for nick
-    #I've placed my thoughts and things we can come back and fix inbetween {} all over the code
-    #{this is an example}
 
-
-
-    #Shalin's generic ode solver testing, this would be moved to a main script eventually
-
-    dt = 1      #what is out step size days years?
-    x0 = tp[0]
-
-
-    a = 0.4
-    b = 0.5
-    c = 0.1
-
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, c, x0])
+    #plotting given water level data
     fig, axes = plt.subplots(1)
+    timePressure, waterlevel = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
+    #axes.plot(timePressure, waterlevel/-1470, 'bo', marker='o')
+
+    #plotting given temperature data
+    timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
+    #axes.plot(timeTemp, temp, 'ro', marker='o')
+
+    tv = np.linspace(1985,2014,29)
+    dt = 1      #what is out step size days years?
+    x0 = -0.20
+    
+    a = 0.000001
+    b = 0.01
+    c = 0.05
+
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, tv, dt, x0, pars=[a, b, c, x0])
+    axes.plot(timei, pressurei, color='r', marker='o')
+
+
+    dt = 0.1      #what is out step size days years?
+    x0 = -0.20
+    a = 0.01
+    b = 0.01
+
+    #timei, tempi = solve_temperature_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, x0])
     axes.plot(timei, pressurei, color='r', marker='o')
     plt.show()
+
+    
