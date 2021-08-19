@@ -144,7 +144,7 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
     q = interpolate_q_total(t)  
 
-    q = q/86.4                                                                                                                                           
+    q = q*365                                                                                                                                         
                                                                                                                                                                             #{what is order of parameters?}
     # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
     dqdt = dqdt_function(t,q)
@@ -331,29 +331,29 @@ if __name__ == "__main__":
     
     
     
-    t = np.linspace(1950,2014,1*365*24*60*60+1)
+    t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = wl*997*9.81
+    wl = (wl*997*9.81) - 1600000
     #wl = np.interp(t,tP,wlevel)
 
     fig, axes = plt.subplots(1)
-    #axes.plot(t, wl, 'bo', marker='o')
+    axes.plot(tP, wl, 'bo', marker='o')
 
 
-    dt = 1*365*24*60*60      #step size in seconds
-    x0 = 0
+    dt = 1      #step size in days
+    x0 = 1600000
     
     a = 0.15
     b = 0.12
     c = 0.6
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[a, b, c, x0])
-    axes.plot(timei, pressurei,'r--')
+    #axes.plot(timei, pressurei,'r--')
 
     #plotting given temperature data
     timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
-    axes.plot(timeTemp, temp, 'ro', marker='o')
+    #axes.plot(timeTemp, temp, 'ro', marker='o')
 
     #timei, tempi = solve_temperature_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, x0])
     #axes.plot(timei, tempi, color='r', marker='o')
