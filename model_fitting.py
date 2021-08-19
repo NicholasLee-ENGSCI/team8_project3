@@ -142,9 +142,8 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     '''
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t)  
-
-    q = q*365                                                                                                                                         
+    q = interpolate_q_total(t) 
+    q = q*365000                                                                                                                                      
                                                                                                                                                                             #{what is order of parameters?}
     # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
     dqdt = dqdt_function(t,q)
@@ -171,7 +170,7 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 
 def fit_pressure(t, ap, bp, cp):
     dt = 1          #constant step size
-    P0 = 1600000       #constant inital value 
+    P0 = 5000       #constant inital value 
 
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp, P0])
     return pressure
@@ -324,29 +323,22 @@ if __name__ == "__main__":
 
 
     #plotting given water level data
-    
-
-    
-
-    
-    
-    
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = (wl*997*9.81) - 1600000
-    #wl = np.interp(t,tP,wlevel)
+    wl = (wl*997*9.81) - 2909250 + 5000
+    wp = np.interp(t,tP,wl)
 
     fig, axes = plt.subplots(1)
     axes.plot(tP, wl, 'bo', marker='o')
 
 
     dt = 1      #step size in days
-    x0 = 1600000
+    x0 = 5000
     
-    a = 0.15
-    b = 0.12
-    c = 0.6
+    a = 0.13
+    b = 0.7
+    c = 0.7
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[a, b, c, x0])
     #axes.plot(timei, pressurei,'r--')
@@ -359,11 +351,11 @@ if __name__ == "__main__":
     #axes.plot(timei, tempi, color='r', marker='o')
     
 
-    #para = op.curve_fit(fit_pressure, tv, wl)
-    #print(para)
+    para = op.curve_fit(fit_pressure, t, wp)
+    print(para)
 
-    #a = para[0]
-    #b = para[1]
+    print(para[0])
+    b = para[1]
     #c = para[2]
 
     
