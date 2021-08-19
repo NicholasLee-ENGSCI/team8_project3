@@ -7,7 +7,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
-from scipy.interpolate import interp1d
+from scipy import optimize as op
 
 def interpolate_q_total(t):
     ''' interplate two extraction rates to find the total extraction rate, q.
@@ -239,6 +239,11 @@ def temperature_ode_model(t, T, at, bp, ap, bt, P, P0, Tx, T0):
     return -at*(bp/ap)*(P-P0)*(Tx-T)-bt*(T-T0)                                                                                           #{cancel to 0 if pressure makes Tx = T}
 
 
+def fit_pressure(t, a, b, c):
+    time, pressure = solve_pressure_ode(pressure_ode_model, t, 1, -0.2, pars=[a, b, c, -0.2])
+    return pressure
+
+
 def solve_temperature_ode(f,t, dt, x0, pars):
     '''Solve the temperature ODE numerically.
         
@@ -328,9 +333,6 @@ if __name__ == "__main__":
     b = 0.01
     c = 0.05
 
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, tv, dt, x0, pars=[a, b, c, x0])
-    axes.plot(timei, pressurei, color='r', marker='o')
-
 
     dt = 0.1      #what is out step size days years?
     x0 = -0.20
@@ -338,7 +340,16 @@ if __name__ == "__main__":
     b = 0.01
 
     #timei, tempi = solve_temperature_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, x0])
+    #axes.plot(timei, tempi, color='r', marker='o')
+    
+
+    para = op.curve_fit(fit_pressure, tv, pressurei)
+    print(para)
+
+    a = para[0]
+    b = para[1]
+    c = para[2]
+
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, tv, dt, x0, pars=[a, b, c, x0])
     axes.plot(timei, pressurei, color='r', marker='o')
     plt.show()
-
-    
