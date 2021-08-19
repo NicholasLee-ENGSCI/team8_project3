@@ -104,7 +104,7 @@ def pressure_ode_model(t, P, q, dqdt, ap, bp, cp, P0):            #{remember to 
     # the first derivative returns dP/dt = -a*q-b*(P-P0)-c*dqdt where all the parameters are provided as inputs 
     return -ap*q-bp*(P-P0)-cp*dqdt
 
-def solve_pressure_ode(f,t, dt, x0, pars):
+def solve_pressure_ode(f,t, dt, P0, pars):
     '''Solve the pressure ODE numerically.
         
         Parameters:
@@ -115,7 +115,7 @@ def solve_pressure_ode(f,t, dt, x0, pars):
             time of solution.
         dt : float
             Time step length.
-        x0 : float
+        P0 : float
             Initial value of solution.
         pars : array-like
             List of parameters passed to ODE function f.
@@ -147,15 +147,15 @@ def solve_pressure_ode(f,t, dt, x0, pars):
     # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
     dqdt = dqdt_function(t,q)
 
-    nt = int(np.ceil((t[-1]-t[0])/dt))	#number of steps	
-    ts = t[0]+np.arange(nt+1)*dt		    #x/t array
-    ys = 0.*ts						    #array to store solution values
-    ys[0] = x0						    #set initial value of solution array
+    nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
+    ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
+    ys = 0.*ts						    #initialise solution array
+    ys[0] = P0						    #set initial value of solution array
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
 
-
+        #calculating first derivative
         fk = f(ts[i], ys[i], q[i], dqdt[i], *pars)
 
         #calculating the second derivative evaulation
@@ -166,6 +166,13 @@ def solve_pressure_ode(f,t, dt, x0, pars):
     
 	#Return both arrays contained calculated values
     return ts, ys
+
+def fit_pressure(t, ap, bp, cp):
+    dt = 1          #constant step size
+    P0 = -0.2       #constant inital value 
+
+    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt,P0, pars=[ap, bp, cp, P0])
+    return pressure
 
 def plot_pressure_model(t,y):       #{could rewrite this genericaly later and include labels as parameters??? otherwise is a redundant function atm, good for now}
     '''
@@ -237,12 +244,6 @@ def temperature_ode_model(t, T, at, bp, ap, bt, P, P0, Tx, T0):
     
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
     return -at*(bp/ap)*(P-P0)*(Tx-T)-bt*(T-T0)                                                                                           #{cancel to 0 if pressure makes Tx = T}
-
-
-def fit_pressure(t, a, b, c):
-    time, pressure = solve_pressure_ode(pressure_ode_model, t, 1, -0.2, pars=[a, b, c, -0.2])
-    return pressure
-
 
 def solve_temperature_ode(f,t, dt, x0, pars):
     '''Solve the temperature ODE numerically.
