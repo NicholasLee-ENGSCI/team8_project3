@@ -54,7 +54,7 @@ def dqdt_function(t,q):
     '''
     dqdt = []
     for i in range(0,len(t)-1):
-        a = (q[i+1]-q[i])/(365*(t[i+1]-t[i])) # denominator is multiplied by 365 to convert years to days. 
+        a = (q[i+1]-q[i])/((t[i+1]-t[i])) # denominator is multiplied by 365 to convert years to days. 
         dqdt.append(a)
     
     # dqdt of the last data point is assumed to be of same rate as the dqdt of second to last data point.
@@ -122,9 +122,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 
         Returns:
         --------
-        t : array-like
+        ts : array-like
             Independent variable solution vector.
-        x : array-like
+        ys : array-like
             Dependent variable solution vector.
 
         Notes:
@@ -142,7 +142,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     '''
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t)                                                                                                                                             
+    q = interpolate_q_total(t)  
+
+    q = q/86.4                                                                                                                                           
                                                                                                                                                                             #{what is order of parameters?}
     # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
     dqdt = dqdt_function(t,q)
@@ -169,9 +171,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 
 def fit_pressure(t, ap, bp, cp):
     dt = 1          #constant step size
-    P0 = -0.2       #constant inital value 
+    P0 = 1600000       #constant inital value 
 
-    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt,P0, pars=[ap, bp, cp, P0])
+    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp, P0])
     return pressure
 
 def plot_pressure_model(t,y):       #{could rewrite this genericaly later and include labels as parameters??? otherwise is a redundant function atm, good for now}
@@ -309,8 +311,12 @@ def solve_temperature_ode(f,t, dt, x0, pars):
     return ts, ys
 
 if __name__ == "__main__":
-    tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
-    qtot = interpolate_q_total(tp)
+
+    #read in water level andd time
+    #tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
+    
+
+    #qtot = interpolate_q_total(tp)
     #total extraction rate 
     #plot_pressure_model(tp,qtot)
     #total rate of change of extraction rate 
@@ -318,39 +324,47 @@ if __name__ == "__main__":
 
 
     #plotting given water level data
+    
+
+    
+
+    
+    
+    
+    t = np.linspace(1950,2014,1*365*24*60*60+1)
+
+    tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
+    wl = wl*997*9.81
+    #wl = np.interp(t,tP,wlevel)
+
     fig, axes = plt.subplots(1)
-    timePressure, waterlevel = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    #axes.plot(timePressure, waterlevel/-1470, 'bo', marker='o')
+    #axes.plot(t, wl, 'bo', marker='o')
+
+
+    dt = 1*365*24*60*60      #step size in seconds
+    x0 = 0
+    
+    a = 0.15
+    b = 0.12
+    c = 0.6
+
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[a, b, c, x0])
+    axes.plot(timei, pressurei,'r--')
 
     #plotting given temperature data
     timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
-    #axes.plot(timeTemp, temp, 'ro', marker='o')
-
-    tv = np.linspace(1985,2014,29)
-    dt = 1      #what is out step size days years?
-    x0 = -0.20
-    
-    a = 0.000001
-    b = 0.01
-    c = 0.05
-
-
-    dt = 0.1      #what is out step size days years?
-    x0 = -0.20
-    a = 0.01
-    b = 0.01
+    axes.plot(timeTemp, temp, 'ro', marker='o')
 
     #timei, tempi = solve_temperature_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, x0])
     #axes.plot(timei, tempi, color='r', marker='o')
     
 
-    para = op.curve_fit(fit_pressure, tv, pressurei)
-    print(para)
+    #para = op.curve_fit(fit_pressure, tv, wl)
+    #print(para)
 
-    a = para[0]
-    b = para[1]
-    c = para[2]
+    #a = para[0]
+    #b = para[1]
+    #c = para[2]
 
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, tv, dt, x0, pars=[a, b, c, x0])
-    axes.plot(timei, pressurei, color='r', marker='o')
+    
     plt.show()
