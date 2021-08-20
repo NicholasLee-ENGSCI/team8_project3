@@ -154,9 +154,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     ys[0] = P0						    #set initial value of solution array
     
     #calculating initial value before loop so initial presure can be specified
-    fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
-    fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
-    ys[0] = ys[0] + dt*((fk + fk1)/2)
+    #fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
+    #fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
+    #ys[0] = ys[0] + dt*((fk + fk1)/2)
 
     #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
     #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
@@ -165,7 +165,7 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     #ys[1] = ys[0] + dt*((fk + 2*fk1 + 2*fk2 + fk3)/6)
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
-    for i in range(1,nt):
+    for i in range(nt):
 
         #improved eulers
         fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars)
@@ -208,7 +208,7 @@ def plot_pressure_model(t,y):
         plt.savefig('Rate_of_change_of_total_extraction_rate.png',dpi=300)
     return
 
-def temperature_ode_model(t, T, at, bp, ap, bt, P, P0, Tx, T0):
+def temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt):
     ''' Return the derivative dT/dt at time, t, for given parameters.
 
         Parameters:
@@ -323,11 +323,11 @@ def solve_temperature_ode(f,t, dt, x0, pars):
 	#Return both arrays contained calculated values
     return ts, ys
 
-def fit_temperature(t, aT, bT, cp):
+def fit_temperature(t, aT, bT):
     dt = 1          #constant step size
-    P0 = 5000       #constant inital value 
+    T0 = 149       #constant inital value 
 
-    time, pressure = solve_temperature_ode(temperature_ode_model, t, dt, P0, pars=[ap, bp, cp])
+    time, pressure = solve_temperature_ode(temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt))
     return pressure
 
 if __name__ == "__main__":
@@ -351,10 +351,11 @@ if __name__ == "__main__":
     wp = np.interp(t,tP,wl)
 
     fig, ax1 = plt.subplots(1)
+    ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    para_bounds = ([-1,-1,-1],[3,3,3])
-    #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
+    para_bounds = ([-1,-1,-1],[1,1,1])
+    para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
     paraP,_ = op.curve_fit(fit_pressure, t, wp, bounds=para_bounds)
     print(paraP)
@@ -369,7 +370,7 @@ if __name__ == "__main__":
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
     ax1.plot(timei, pressurei,'r--')
 
-    ax2 = ax1.twinx()
+    
 
     #plotting given temperature data
     timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
