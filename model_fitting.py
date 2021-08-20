@@ -61,7 +61,7 @@ def dqdt_function(t,q):
     dqdt.append(a)
     return dqdt
 
-def pressure_ode_model(t, P, q, dqdt, ap, bp, cp, P0):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
+def pressure_ode_model(t, P, P0, q, dqdt, ap, bp, cp):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
     ''' Return the derivative dP/dt at time, t, for given parameters.
 
         Parameters:
@@ -81,7 +81,7 @@ def pressure_ode_model(t, P, q, dqdt, ap, bp, cp, P0):            #{remember to 
         c : float
             slow drainage strength parameter. 
         P0 : float
-            Initial value of the dependent variable.
+            Ambient value of the dependent variable.
 
         Returns:
         --------
@@ -152,18 +152,32 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
     ys = 0.*ts						    #initialise solution array
     ys[0] = P0						    #set initial value of solution array
+    
+    #calculating initial value before loop so initial presure can be specified
+    fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
+    fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
+    ys[0] = ys[0] + dt*((fk + fk1)/2)
+
+    #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
+    #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
+    #fk2 = f(ts[0] + dt/2, ys[0] + dt*fk1/2, 5000, q[0], dqdt[0], *pars)
+    #fk3 = f(ts[0] + dt, ys[0] + dt*fk2, 5000, q[0], dqdt[0], *pars)
+    #ys[1] = ys[0] + dt*((fk + 2*fk1 + 2*fk2 + fk3)/6)
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
-    for i in range(nt):
+    for i in range(1,nt):
 
-        #calculating first derivative
-        fk = f(ts[i], ys[i], q[i], dqdt[i], *pars)
-
-        #calculating the second derivative evaulation
-        fk1 = f(ts[i] + dt, ys[i] + dt*fk, q[i], dqdt[i], *pars)
-
-        #return stepped improved euler value
+        #improved eulers
+        fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars)
+        fk1 = f(ts[i] + dt, ys[i] + dt*fk, ys[i-1], q[i], dqdt[i], *pars)
         ys[i+1] = ys[i] + dt*((fk + fk1)/2)
+
+        #RK45
+        #fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars) 
+        #fk1 = f(ts[i] + dt/2, ys[i] + dt*fk/2, ys[i-1], q[i], dqdt[i], *pars)
+        #fk2 = f(ts[i] + dt/2, ys[i] + dt*fk1/2, ys[i-1], q[i], dqdt[i], *pars)
+        #fk3 = f(ts[i] + dt, ys[i] + dt*fk2, ys[i-1], q[i], dqdt[i], *pars)
+        #ys[i+1] = ys[i] + dt*((fk + 2*fk1 + 2*fk2 + fk3)/6)
     
 	#Return both arrays contained calculated values
     return ts, ys
@@ -172,10 +186,10 @@ def fit_pressure(t, ap, bp, cp):
     dt = 1          #constant step size
     P0 = 5000       #constant inital value 
 
-    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp, P0])
+    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
 
-def plot_pressure_model(t,y):       #{could rewrite this genericaly later and include labels as parameters??? otherwise is a redundant function atm, good for now}
+def plot_pressure_model(t,y):       
     '''
     '''
     # plotting format 
@@ -309,6 +323,13 @@ def solve_temperature_ode(f,t, dt, x0, pars):
 	#Return both arrays contained calculated values
     return ts, ys
 
+def fit_temperature(t, aT, bT, cp):
+    dt = 1          #constant step size
+    P0 = 5000       #constant inital value 
+
+    time, pressure = solve_temperature_ode(temperature_ode_model, t, dt, P0, pars=[ap, bp, cp])
+    return pressure
+
 if __name__ == "__main__":
 
     #read in water level andd time
@@ -326,39 +347,38 @@ if __name__ == "__main__":
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = (wl*997*9.81) - 2909250 + 5000
+    wl = ((wl*997*9.81) - 2909250+5000)
     wp = np.interp(t,tP,wl)
 
-    fig, axes = plt.subplots(1)
-    axes.plot(tP, wl, 'bo', marker='o')
+    fig, ax1 = plt.subplots(1)
+    ax1.plot(tP, wl, 'bo', marker='o')
 
-    para,_ = op.curve_fit(fit_pressure, t, wp)
-    print(para)
+    para_bounds = ([-1,-1,-1],[3,3,3])
+    #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
-    a = para[0]
-    b = para[1]
-    c = para[2]
+    paraP,_ = op.curve_fit(fit_pressure, t, wp, bounds=para_bounds)
+    print(paraP)
+
+    ap = paraP[0]
+    bp = paraP[1]
+    cp = paraP[2]
 
     dt = 1      #step size in days
-    x0 = 5000
-    
+    x0 = 5000   #starting pressure value
 
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
+    ax1.plot(timei, pressurei,'r--')
 
-    #a = 0.13
-    #b = 0.7
-    #c = 0.7
-
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[a, b, c, x0])
-    axes.plot(timei, pressurei,'r--')
+    ax2 = ax1.twinx()
 
     #plotting given temperature data
     timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
-    #axes.plot(timeTemp, temp, 'ro', marker='o')
+    ax2.plot(timeTemp, temp, 'ro', marker='o')
 
-    #timei, tempi = solve_temperature_ode(pressure_ode_model, tp, dt, x0, pars=[a, b, x0])
-    #axes.plot(timei, tempi, color='r', marker='o')
+    #timei, tempi = solve_temperature_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp])
+    #ax2.plot(timei, tempi, color='r', marker='o')
     
 
     
-    
+
     plt.show()
