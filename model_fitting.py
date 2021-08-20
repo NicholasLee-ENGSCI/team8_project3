@@ -154,9 +154,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     ys[0] = P0						    #set initial value of solution array
     
     #calculating initial value before loop so initial presure can be specified
-    #fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
-    #fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
-    #ys[0] = ys[0] + dt*((fk + fk1)/2)
+    fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
+    fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
+    ys[0] = ys[0] + dt*((fk + fk1)/2)
 
     #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
     #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
@@ -260,7 +260,7 @@ def temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt):
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
     return -at*(bp/ap)*(P-P0)*(Tx-T)-bt*(T-T0)                                                                                           #{cancel to 0 if pressure makes Tx = T}
 
-def solve_temperature_ode(f,t, dt, x0, pars):
+def solve_temperature_ode(f,t, dt, T0, P, pars):
     '''Solve the temperature ODE numerically.
         
         Parameters:
@@ -306,32 +306,27 @@ def solve_temperature_ode(f,t, dt, x0, pars):
     nt = int(np.ceil((t[-1]-t[0])/dt))	    #number of steps	
     ts = t[0]+np.arange(nt+1)*dt		    #x/t array
     ys = 0.*ts						        #array to store solution values
-    ys[0] = x0						        #set initial value of solution array
+    ys[0] = T0						        #set initial value of solution array
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
 
-
-        fk = f(ts[i], ys[i], q[i], dqdt[i], *pars)
-
-        #calculating the second derivative evaulation
-        fk1 = f(ts[i] + dt, ys[i] + dt*fk, q[i], dqdt[i], *pars)
-
-        #return stepped improved euler value
+        fk = f(ts[i], ys[i], T0, P[i], P[i-1], *pars)
+        fk1 = f(ts[i] + dt, ys[i] + dt*fk, T0, P[i], P[i-1], *pars)
         ys[i+1] = ys[i] + dt*((fk + fk1)/2)
     
 	#Return both arrays contained calculated values
     return ts, ys
 
-def fit_temperature(t, aT, bT):
+def fit_temperature(t, P, ap, bp, at, bt):
     dt = 1          #constant step size
     T0 = 149       #constant inital value 
 
-    time, pressure = solve_temperature_ode(temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt))
+
+    time, pressure = solve_temperature_ode(temperature_ode_model,t, dt, T0, P, ap, bp, at, bt)
     return pressure
 
 if __name__ == "__main__":
-
     #read in water level andd time
     #tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
     
@@ -354,32 +349,35 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    para_bounds = ([-1,-1,-1],[1,1,1])
+    #para_bounds = ([-1,-1,-1],[1,1,1])
     para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
+    dt = 1      #step size in days
+    x0 = 5000   #starting pressure value
+
+    #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function
     paraP,_ = op.curve_fit(fit_pressure, t, wp, bounds=para_bounds)
+
     print(paraP)
 
     ap = paraP[0]
     bp = paraP[1]
     cp = paraP[2]
 
-    dt = 1      #step size in days
-    x0 = 5000   #starting pressure value
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
-    ax1.plot(timei, pressurei,'r--')
-
+    ax1.plot(timei, pressurei,'b--')
     
-
     #plotting given temperature data
-    timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
-    ax2.plot(timeTemp, temp, 'ro', marker='o')
+    tT,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
+    ax2.plot(tT, temp, 'ro', marker='o')
+    tTemp = np.interp(t,tP,wl)
 
-    #timei, tempi = solve_temperature_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp])
-    #ax2.plot(timei, tempi, color='r', marker='o')
-    
+    paraT,_ = op.curve_fit(lambda at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp, bounds=para_bounds)
+    print(paraT)
 
+    #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
+    #ax2.plot(timei, tempi, color='r--', marker='o')
     
 
     plt.show()
