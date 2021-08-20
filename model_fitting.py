@@ -332,16 +332,24 @@ if __name__ == "__main__":
     fig, axes = plt.subplots(1)
     axes.plot(tP, wl, 'bo', marker='o')
 
+    para,_ = op.curve_fit(fit_pressure, t, wp)
+    print(para)
+
+    a = para[0]
+    b = para[1]
+    c = para[2]
 
     dt = 1      #step size in days
     x0 = 5000
     
-    a = 0.13
-    b = 0.7
-    c = 0.7
+
+
+    #a = 0.13
+    #b = 0.7
+    #c = 0.7
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[a, b, c, x0])
-    #axes.plot(timei, pressurei,'r--')
+    axes.plot(timei, pressurei,'r--')
 
     #plotting given temperature data
     timeTemp,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
@@ -351,12 +359,6 @@ if __name__ == "__main__":
     #axes.plot(timei, tempi, color='r', marker='o')
     
 
-    para = op.curve_fit(fit_pressure, t, wp)
-    print(para)
-
-    print(para[0])
-    b = para[1]
-    #c = para[2]
-
+    
     
     plt.show()
