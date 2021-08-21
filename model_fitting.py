@@ -9,6 +9,11 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy import optimize as op
 
+#Global variables for testing
+initial_p = 5000         #initial pressure
+time = 0              #step size, days, years, 
+
+
 def interpolate_q_total(t):
     ''' interplate two extraction rates to find the total extraction rate, q.
 
@@ -182,13 +187,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 	#Return both arrays contained calculated values
     return ts, ys
 
-def fit_pressure(t, ap, bp, cp):
-    dt = 1          #constant step size
-    P0 = 5000       #constant inital value 
-
-    q = interpolate_q_total(t) 
-    q = q*365000                                                                                                                                                                                                                                                                                                        
-    dqdt = dqdt_function(t,q)
+def fit_pressure(t, dt, P0, ap, bp, cp):
+    dt = 1               #constant step size
+    P0 = initial_p       #constant inital value 
 
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
@@ -353,16 +354,16 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    bound = 0.001
+    bound = 1
 
     para_bounds = ([-bound,-bound,-bound],[bound,bound,bound])
     #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
-    dt = 1      #step size in days
-    x0 = 5000   #starting pressure value
+    dt = 1      #step size
+    P0 = initial_p   #starting pressure value
 
     #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function or better helper
-    paraP,_ = op.curve_fit(fit_pressure, t, wp, bounds=para_bounds)
+    paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, P0, ap, bp, cp), t, wp)
 
     print(paraP)
 
@@ -371,7 +372,7 @@ if __name__ == "__main__":
     cp = paraP[2]
 
 
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     ax1.plot(timei, pressurei,'b--')
     
     #plotting given temperature data
@@ -385,11 +386,11 @@ if __name__ == "__main__":
     #at = paraT[0]
     #bt = paraT[1]
 
-    at = 0.1
-    bt = 0
+    #at = 0.1
+    #bt = 0
 
-    timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
-    ax2.plot(timei, tempi,'r--', marker='o')
+    #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
+    #ax2.plot(timei, tempi,'r--', marker='o')
     
 
     plt.show()
