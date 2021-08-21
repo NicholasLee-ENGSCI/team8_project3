@@ -182,11 +182,6 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     return ts, ys
 
 def fit_pressure(t, dt, P0, ap, bp, cp):
-    q = interpolate_q_total(t) 
-    q = q/86.4                                                                                                                                                                                                                                                                                                
-    dqdt = np.gradient(q)
-
-
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
 
@@ -313,7 +308,7 @@ def solve_temperature_ode(f,t, dt, T0, P, pars):
 	#Return both arrays contained calculated values
     return ts, ys
 
-def fit_temperature(t, P, ap, bp, at, bt):
+def fit_temperature(t, dt, T0, P, ap, bp, at, bt):
     dt = 1          #constant step size
     T0 = 149       #constant inital value 
 
@@ -349,13 +344,13 @@ if __name__ == "__main__":
     dt = 1              #step size
     x0 = 15000          #starting pressure value
 
-    ap = 0.15
+    ap = -1.74
     bp = 0.56
     cp = 180
 
     bound = np.inf           #np.inf to ignore bounds
     #p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
-    paraP,_ = op.curve_fit(lambda t, ap: fit_pressure(t, dt, x0, ap, bp, cp), xdata=t, ydata=wp,)
+    paraP,_ = op.curve_fit(lambda t, ap, bp,cp : fit_pressure(t, dt, x0, ap, bp, cp), xdata=t, ydata=wp,)
 
     print(paraP)
     ap = -1.74
@@ -363,8 +358,8 @@ if __name__ == "__main__":
     cp = 180
 
     ap = paraP[0]
-    #bp = paraP[1]
-    #cp = paraP[1]
+    bp = paraP[1]
+    cp = paraP[2]
     
 
 
@@ -377,14 +372,23 @@ if __name__ == "__main__":
     ax2.plot(tT, temp, 'ro', marker='o')
     tTemp = np.interp(t,tP,wl)
 
+    x0 = 149            #starting pressure value
+
+    ap = -1.74
+    bp = 0.56
+
+    at = 0
+    bt = 0 
+
     #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
     #print(paraT)
+    #at = 0.1
+    #bt = 0
 
     #at = paraT[0]
     #bt = paraT[1]
 
-    #at = 0.1
-    #bt = 0
+    
 
     #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
     #ax2.plot(timei, tempi,'r--', marker='o')
