@@ -142,11 +142,15 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     '''
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t) 
-    q = q*365000                                                                                                                                      
-                                                                                                                                                                            #{what is order of parameters?}
-    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
-    dqdt = dqdt_function(t,q)
+    q = interpolate_q_total(t)
+    #q = q*365000
+    dqdt = np.gradient(q)
+    
+    q = q/86.4                                                                                                                                
+                                                                                                                                                                           
+    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         
+    #dqdt = dqdt_function(t,q)
+    
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
@@ -154,9 +158,9 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     ys[0] = P0						    #set initial value of solution array
     
     #calculating initial value before loop so initial presure can be specified
-    fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
-    fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
-    ys[0] = ys[0] + dt*((fk + fk1)/2)
+    #fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
+    #fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
+    #ys[0] = ys[0] + dt*((fk + fk1)/2)
 
     #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
     #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
@@ -183,6 +187,12 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     return ts, ys
 
 def fit_pressure(t, dt, P0, ap, bp, cp):
+    q = interpolate_q_total(t) 
+    q = q/86.4   
+                                                                                                                                                                                                                                                                                                 
+    dqdt = np.gradient(q)
+
+
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
 
@@ -255,13 +265,7 @@ def temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt):
         Tx = 30 # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
     
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
-
-    #value are too small
-    t11 = -at*(bp/ap)
-    t12 = (P-P0)*(Tx-T)
-    t1 = t11*t12
-
-    return t1 - bt*(T-T0)                                                                                         
+    return -at*(bp/ap)*(P-P0)*(Tx-T) - bt*(T-T0)                                                                                         
 
 def solve_temperature_ode(f,t, dt, T0, P, pars):
     '''Solve the temperature ODE numerically.
@@ -339,23 +343,20 @@ if __name__ == "__main__":
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = ((wl*997*9.81) - 2909250+5000)
+    wl = (wl*997*9.81) - 2909250
     wp = np.interp(t,tP,wl)
 
     fig, ax1 = plt.subplots(1)
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    bound = 1
-
-    para_bounds = ([-bound,-bound,-bound],[bound,bound,bound])
-    #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
+    bound = 1           #np.inf to ignore bounds
 
     dt = 1              #step size
-    P0 = initial_p      #starting pressure value
+    P0 = 5000           #starting pressure value
 
     #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function or better helper
-    paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, P0, ap, bp, cp), t, wp)
+    paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, P0, ap, bp, cp), xdata=t, ydata=wp,  p0=[0.1, 0.1, 0.1], bounds=([-bound,-bound,-bound],[bound,bound,bound]))
 
     print(paraP)
 
