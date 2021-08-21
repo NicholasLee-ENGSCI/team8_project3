@@ -146,7 +146,6 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     q = q/86.4
     dqdt = np.gradient(q)
 
-
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
     ys = 0.*ts						    #initialise solution array
@@ -309,11 +308,7 @@ def solve_temperature_ode(f,t, dt, T0, P, pars):
     return ts, ys
 
 def fit_temperature(t, dt, T0, P, ap, bp, at, bt):
-    dt = 1          #constant step size
-    T0 = 149       #constant inital value 
-
-
-    time, temp = solve_temperature_ode(temperature_ode_model,t, dt, T0, P, pars = [ap, bp, at, bt])
+    time, temp = solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars = [ap, bp, at, bt])
     return temp
 
 if __name__ == "__main__":
@@ -332,7 +327,7 @@ if __name__ == "__main__":
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = (wl*997*9.81) - 2909250 +5000
+    wl = ((wl*997*9.81) - 2909250)*100
     wp = np.interp(t,tP,wl)
 
     fig, ax1 = plt.subplots(1)
@@ -342,7 +337,7 @@ if __name__ == "__main__":
     
 
     dt = 1              #step size
-    x0 = 15000          #starting pressure value
+    x0 = 160000          #starting pressure value
 
     ap = -1.74
     bp = 0.56
@@ -374,13 +369,13 @@ if __name__ == "__main__":
 
     x0 = 149            #starting pressure value
 
-    ap = -1.74
-    bp = 0.56
+    #ap = 0.15
+    #bp = 0.12
 
-    at = 0
-    bt = 0 
+    at = -0.00001
+    bt = 0.008
 
-    #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
+    #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, dt, x0, pressurei, ap, bp, at, bt), xdata=t, ydata=tTemp)
     #print(paraT)
     #at = 0.1
     #bt = 0
@@ -390,8 +385,8 @@ if __name__ == "__main__":
 
     
 
-    #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
-    #ax2.plot(timei, tempi,'r--', marker='o')
+    timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
+    ax2.plot(timei, tempi,'r--')
     
 
     plt.show()
