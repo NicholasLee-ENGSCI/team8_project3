@@ -188,9 +188,6 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     return ts, ys
 
 def fit_pressure(t, dt, P0, ap, bp, cp):
-    dt = 1               #constant step size
-    P0 = initial_p       #constant inital value 
-
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
 
