@@ -9,11 +9,6 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from scipy import optimize as op
 
-#Global variables for testing
-initial_p = 5000         #initial pressure
-time = 0              #step size, days, years, 
-
-
 def interpolate_q_total(t):
     ''' interplate two extraction rates to find the total extraction rate, q.
 
@@ -356,8 +351,8 @@ if __name__ == "__main__":
     para_bounds = ([-bound,-bound,-bound],[bound,bound,bound])
     #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
-    dt = 1      #step size
-    P0 = initial_p   #starting pressure value
+    dt = 1              #step size
+    P0 = initial_p      #starting pressure value
 
     #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function or better helper
     paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, P0, ap, bp, cp), t, wp)
@@ -371,6 +366,7 @@ if __name__ == "__main__":
 
     timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     ax1.plot(timei, pressurei,'b--')
+    
     
     #plotting given temperature data
     tT,temp = np.genfromtxt('gr_T.txt',delimiter=',',skip_header=1).T # Temperature (gr_T data)
