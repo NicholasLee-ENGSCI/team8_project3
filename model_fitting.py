@@ -263,11 +263,12 @@ def temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt):
     
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
 
-    #breaking up into parts to bugfix
-    t1 = -at*(bp/ap)*(P-P0)*(Tx-T)
-    t2 = bt*(T-T0)
+    #value are too small
+    t11 = -at*(bp/ap)
+    t12 = (P-P0)*(Tx-T)
+    t1 = t11*t12
 
-    return t1 - t2                                                                                          
+    return t1 - bt*(T-T0)                                                                                         
 
 def solve_temperature_ode(f,t, dt, T0, P, pars):
     '''Solve the temperature ODE numerically.
@@ -352,7 +353,9 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    para_bounds = ([-1,-1,-1],[1,1,1])
+    bound = 0.001
+
+    para_bounds = ([-bound,-bound,-bound],[bound,bound,bound])
     #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
     dt = 1      #step size in days
@@ -376,14 +379,14 @@ if __name__ == "__main__":
     ax2.plot(tT, temp, 'ro', marker='o')
     tTemp = np.interp(t,tP,wl)
 
-    paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
-    print(paraT)
+    #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
+    #print(paraT)
 
-    at = paraT[0]
-    bt = paraT[1]
+    #at = paraT[0]
+    #bt = paraT[1]
 
-    #at = 0.000001
-    #bt = 0.000001
+    at = 0.1
+    bt = 0
 
     timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
     ax2.plot(timei, tempi,'r--', marker='o')
