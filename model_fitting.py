@@ -143,24 +143,19 @@ def solve_pressure_ode(f,t, dt, P0, pars):
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
     q = interpolate_q_total(t)
-    #q = q*365000
+    q = q/86.4
     dqdt = np.gradient(q)
-    
-    q = q/86.4                                                                                                                                
-                                                                                                                                                                           
-    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         
-    #dqdt = dqdt_function(t,q)
-    
+
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
     ys = 0.*ts						    #initialise solution array
     ys[0] = P0						    #set initial value of solution array
     
-    #calculating initial value before loop so initial presure can be specified
+    #calculating next value before loop so i-1 has a value  {this is more accurate but you get a worse fit so ignore for now}
     #fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
     #fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
-    #ys[0] = ys[0] + dt*((fk + fk1)/2)
+    #ys[1] = ys[0] + dt*((fk + fk1)/2)
 
     #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
     #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
@@ -188,8 +183,7 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 
 def fit_pressure(t, dt, P0, ap, bp, cp):
     q = interpolate_q_total(t) 
-    q = q/86.4   
-                                                                                                                                                                                                                                                                                                 
+    q = q/86.4                                                                                                                                                                                                                                                                                                
     dqdt = np.gradient(q)
 
 
@@ -343,29 +337,38 @@ if __name__ == "__main__":
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
-    wl = (wl*997*9.81) - 2909250
+    wl = (wl*997*9.81) - 2909250 +5000
     wp = np.interp(t,tP,wl)
 
     fig, ax1 = plt.subplots(1)
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    bound = 1           #np.inf to ignore bounds
+    
 
     dt = 1              #step size
-    P0 = 5000           #starting pressure value
+    x0 = 15000          #starting pressure value
 
-    #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function or better helper
-    paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, P0, ap, bp, cp), xdata=t, ydata=wp,  p0=[0.1, 0.1, 0.1], bounds=([-bound,-bound,-bound],[bound,bound,bound]))
+    ap = 0.15
+    bp = 0.56
+    cp = 180
+
+    bound = np.inf           #np.inf to ignore bounds
+    #p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
+    paraP,_ = op.curve_fit(lambda t, ap: fit_pressure(t, dt, x0, ap, bp, cp), xdata=t, ydata=wp,)
 
     print(paraP)
+    ap = -1.74
+    bp = 0.56
+    cp = 180
 
     ap = paraP[0]
-    bp = paraP[1]
-    cp = paraP[2]
+    #bp = paraP[1]
+    #cp = paraP[1]
+    
 
 
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
     ax1.plot(timei, pressurei,'b--')
     
     
