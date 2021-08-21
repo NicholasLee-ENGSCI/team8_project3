@@ -104,7 +104,7 @@ def pressure_ode_model(t, P, P0, q, dqdt, ap, bp, cp):            #{remember to 
     # the first derivative returns dP/dt = -a*q-b*(P-P0)-c*dqdt where all the parameters are provided as inputs 
     return -ap*q-bp*(P-P0)-cp*dqdt
 
-def solve_pressure_ode(f,t, dt, P0, pars):
+def solve_pressure_ode(f,t, dt, P0, indicator, pars):
     '''Solve the pressure ODE numerically.
         
         Parameters:
@@ -117,6 +117,8 @@ def solve_pressure_ode(f,t, dt, P0, pars):
             Time step length.
         P0 : float
             Initial value of solution.
+        indicator: string
+            string that describes the future operation of production. PLEASE REFER TO NOTES TO MORE INFORMATION.
         pars : array-like
             List of parameters passed to ODE function f.
 
@@ -139,11 +141,30 @@ def solve_pressure_ode(f,t, dt, P0, pars):
             2. dependent variable
             3. forcing term, q
             4. all other parameters
+
+        if indicator is:
+            'SAME' => No extrapolation is wanted or production is maintained from year 2014; there is no change in production rate from 2014
+            'STOP' => production is stopped from year 2014; production rate = 0 from q[65]
+            'DOUBLE' => production is doubled from year 2014
+            'HALF' => production is halved from year 2014
     '''
     
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t)
-    q = q/86.4
+    if (indicator == 'SAME'):
+        q = interpolate_q_total(t)
+        q = q/86.4
+    elif (indicator == 'STOP'):
+        q = interpolate_q_total(t)
+        q = q/86.4
+        q[65:101] = 0
+    elif (indicator == 'DOUBLE'):
+        q = interpolate_q_total(t)
+        q = q/86.4
+        q[65:101] = q[64]*2
+    elif (indicator == 'HALF'):
+        q = interpolate_q_total(t)
+        q = q/86.4
+        q[65:101] = q[64]/2
     dqdt = np.gradient(q)
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
@@ -180,8 +201,8 @@ def solve_pressure_ode(f,t, dt, P0, pars):
 	#Return both arrays contained calculated values
     return ts, ys
 
-def fit_pressure(t, dt, P0, ap, bp, cp):
-    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
+def fit_pressure(t, dt, P0, indicator, ap, bp, cp):
+    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])
     return pressure
 
 def plot_pressure_model(t,y):       
@@ -311,6 +332,41 @@ def fit_temperature(t, dt, T0, P, ap, bp, at, bt):
     time, temp = solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars = [ap, bp, at, bt])
     return temp
 
+def pressure_forecast():
+    '''
+    This function is to extrapolate to year 2050, then plot it 
+    '''
+    # plotting format 
+    f,ax1 = plt.subplots(nrows=1,ncols=1)
+    # plotting no change 
+    t = np.linspace(1950,2050,101)
+    y_no_change = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'SAME', pars=[ap, bp, cp])[1]
+    # plotting stopped production
+    y_stop = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'STOP', pars=[ap, bp, cp])[1]
+    # plotting double production
+    y_double = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'DOUBLE', pars=[ap, bp, cp])[1]
+    # plotting half production
+    y_half = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'HALF', pars=[ap, bp, cp])[1]
+    ln1 = ax1.plot(t, y_no_change/10**6, 'k-', label='maintained production')
+    ln2 = ax1.plot(t, y_stop/10**6, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t, y_double/10**6, 'g-', label='production doubled')
+    ln4 = ax1.plot(t, y_half/10**6, 'b-', label='production halved')
+
+    lns = ln1+ln2+ln3+ln4
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns,labs,loc=2)
+    ax1.set_ylabel('Pressure [MPa]')
+    ax1.set_xlabel('time [yr]')
+    ax1.set_title('Pressure predictions for different scenarios from 2014')
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = True
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_forecast.png',dpi=300)
+    return
+
 if __name__ == "__main__":
     #read in water level andd time
     #tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
@@ -318,7 +374,7 @@ if __name__ == "__main__":
 
     #qtot = interpolate_q_total(tp)
     #total extraction rate 
-    #plot_pressure_model(tp,qtot)
+    # plot_pressure_model(tp,qtot)
     #total rate of change of extraction rate 
     #plot_pressure_model(tp,dqdt_function(tp,qtot))
 
@@ -345,7 +401,7 @@ if __name__ == "__main__":
 
     bound = np.inf           #np.inf to ignore bounds
     #p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
-    paraP,_ = op.curve_fit(lambda t, ap, bp,cp : fit_pressure(t, dt, x0, ap, bp, cp), xdata=t, ydata=wp,)
+    paraP,_ = op.curve_fit(lambda t, ap, bp,cp : fit_pressure(t, dt, x0,'SAME', ap, bp, cp), xdata=t, ydata=wp,)
 
     print(paraP)
     ap = -1.74
@@ -358,7 +414,7 @@ if __name__ == "__main__":
     
 
 
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, pars=[ap, bp, cp])
+    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'SAME', pars=[ap, bp, cp])
     ax1.plot(timei, pressurei,'b--')
     
     
@@ -390,3 +446,7 @@ if __name__ == "__main__":
     
 
     plt.show()
+
+    pressure_forecast()
+    # t = np.linspace(1950,2050,101)
+    # plot_pressure_model(t,solve_pressure_ode(pressure_ode_model, t, dt, x0, 'SAME', pars=[ap, bp, cp])[1])
