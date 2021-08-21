@@ -186,6 +186,10 @@ def fit_pressure(t, ap, bp, cp):
     dt = 1          #constant step size
     P0 = 5000       #constant inital value 
 
+    q = interpolate_q_total(t) 
+    q = q*365000                                                                                                                                                                                                                                                                                                        
+    dqdt = dqdt_function(t,q)
+
     time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, pars=[ap, bp, cp])
     return pressure
 
@@ -310,9 +314,10 @@ def solve_temperature_ode(f,t, dt, T0, P, pars):
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
-
-        fk = f(ts[i], ys[i], T0, P[i], P[i-1], *pars)
-        fk1 = f(ts[i] + dt, ys[i] + dt*fk, T0, P[i], P[i-1], *pars)
+        
+        #improved eulers
+        fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars)
+        fk1 = f(ts[i] + dt, ys[i] + dt*fk, ys[i-1], q[i], dqdt[i], *pars)
         ys[i+1] = ys[i] + dt*((fk + fk1)/2)
     
 	#Return both arrays contained calculated values
@@ -323,8 +328,8 @@ def fit_temperature(t, P, ap, bp, at, bt):
     T0 = 149       #constant inital value 
 
 
-    time, pressure = solve_temperature_ode(temperature_ode_model,t, dt, T0, P, ap, bp, at, bt)
-    return pressure
+    time, temp = solve_temperature_ode(temperature_ode_model,t, dt, T0, P, pars = [ap, bp, at, bt])
+    return temp
 
 if __name__ == "__main__":
     #read in water level andd time
@@ -355,7 +360,7 @@ if __name__ == "__main__":
     dt = 1      #step size in days
     x0 = 5000   #starting pressure value
 
-    #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function
+    #this logic doesn't make sense, think about it you already have pressure why am I resolving for pressure rewrite later with a lambda function or better helper
     paraP,_ = op.curve_fit(fit_pressure, t, wp, bounds=para_bounds)
 
     print(paraP)
@@ -373,8 +378,11 @@ if __name__ == "__main__":
     ax2.plot(tT, temp, 'ro', marker='o')
     tTemp = np.interp(t,tP,wl)
 
-    paraT,_ = op.curve_fit(lambda at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp, bounds=para_bounds)
+    paraT,_ = op.curve_fit(lambda at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
     print(paraT)
+
+    at = paraT[0]
+    bt = paraT[1]
 
     #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
     #ax2.plot(timei, tempi, color='r--', marker='o')
