@@ -262,7 +262,12 @@ def temperature_ode_model(t, T, T0, P, P0, ap, bp, at, bt):
         Tx = 30 # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
     
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as inputs 
-    return -at*(bp/ap)*(P-P0)*(Tx-T)-bt*(T-T0)                                                                                           #{cancel to 0 if pressure makes Tx = T}
+
+    #breaking up into parts to bugfix
+    t1 = -at*(bp/ap)*(P-P0)*(Tx-T)
+    t2 = bt*(T-T0)
+
+    return t1 - t2                                                                                          
 
 def solve_temperature_ode(f,t, dt, T0, P, pars):
     '''Solve the temperature ODE numerically.
@@ -300,24 +305,17 @@ def solve_temperature_ode(f,t, dt, T0, P, pars):
             3. forcing term, q
             4. all other parameters
     '''
-    
-    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
-    q = interpolate_q_total(t)                                                                                                                                             
-                                                                                                                                                                            #{what is order of parameters?}
-    # rate of change of total extraction rate is found by differentiating (done using the dqdt_function() function)                                                         {this is a crude solution but works for now}
-    dqdt = dqdt_function(t,q)
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	    #number of steps	
     ts = t[0]+np.arange(nt+1)*dt		    #x/t array
     ys = 0.*ts						        #array to store solution values
     ys[0] = T0						        #set initial value of solution array
 
-    #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
+    #calculate solution values using Improved Euler
     for i in range(nt):
-        
-        #improved eulers
-        fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars)
-        fk1 = f(ts[i] + dt, ys[i] + dt*fk, ys[i-1], q[i], dqdt[i], *pars)
+
+        fk = f(ts[i], ys[i], ys[i-1], P[i], P[i-1], *pars)
+        fk1 = f(ts[i] + dt, ys[i] + dt*fk, ys[i-1], P[i], P[i-1], *pars)
         ys[i+1] = ys[i] + dt*((fk + fk1)/2)
     
 	#Return both arrays contained calculated values
@@ -354,8 +352,8 @@ if __name__ == "__main__":
     ax2 = ax1.twinx()
     ax1.plot(tP, wl, 'bo', marker='o')
 
-    #para_bounds = ([-1,-1,-1],[1,1,1])
-    para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
+    para_bounds = ([-1,-1,-1],[1,1,1])
+    #para_bounds = ([-np.inf,-np.inf,-np.inf],[np.inf,np.inf,np.inf])
 
     dt = 1      #step size in days
     x0 = 5000   #starting pressure value
@@ -378,14 +376,17 @@ if __name__ == "__main__":
     ax2.plot(tT, temp, 'ro', marker='o')
     tTemp = np.interp(t,tP,wl)
 
-    paraT,_ = op.curve_fit(lambda at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
+    paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, pressurei, ap, bp, at, bt), t, tTemp)
     print(paraT)
 
     at = paraT[0]
     bt = paraT[1]
 
-    #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
-    #ax2.plot(timei, tempi, color='r--', marker='o')
+    #at = 0.000001
+    #bt = 0.000001
+
+    timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
+    ax2.plot(timei, tempi,'r--', marker='o')
     
 
     plt.show()
