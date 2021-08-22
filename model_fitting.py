@@ -367,6 +367,43 @@ def pressure_forecast():
         plt.savefig('pressure_forecast.png',dpi=300)
     return
 
+def find_analytic_pressure(t, x0, ap, bp, cp):
+    '''
+    compares analytic solution with model
+    '''
+    
+    pAnalytic = x0 - ((ap*cp)/(bp))*(1-np.exp(-bp*(t))) + cp
+    return pAnalytic
+
+def find_analytic_temp(t, T0, Tcold, a, b, q):
+    
+    return
+
+
+def convergence_analysis(t, x0, ap, bp, cp):
+    f, ax = plt.subplots(1, 1)
+    h_array = np.linspace(1, 2.7, 50)
+    t_values = []
+    p_values = []
+
+    # loop through each h-value
+    for h in h_array:
+        # solve using numerical method for each step size
+        t1, p1 = solve_pressure_ode(pressure_ode_model, t, h, x0, 'SAME', pars=[ap, bp, cp])
+        # store 1/h in the t array
+        t_values.append(1/h)
+        # store the pressure at year 2014 in the y-array
+        p_values.append(p1[-1])
+
+    # plot 1/h against the population after 100 years for each step size value
+    ax.plot(t_values, p_values, 'rx')
+    ax.set_title('Convergence Analysis of Waikite Geyser Recovery Model')
+    ax.set_xlabel('1/time step')
+    ax.set_ylabel('Difference in final pressure value')
+    plt.show()
+
+    return
+
 if __name__ == "__main__":
     #read in water level andd time
     #tp,wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T
@@ -446,6 +483,27 @@ if __name__ == "__main__":
     
 
     plt.show()
+
+    # plot analytic vs numeric solution
+    ap = paraP[0]
+    bp = paraP[1]
+    cp = paraP[2]
+    x0 = 16000  
+
+    fig, ax3 = plt.subplots(1)
+    ax3.plot(timei, pressurei, 'r-', label='Model')
+    pressureA = find_analytic_pressure(timei, x0, ap, bp, cp)
+    ax3.plot(timei, pressureA, 'b-', label='Analytic')
+    plt.show()
+
+    # plot convergence
+    ap = paraP[0]
+    bp = paraP[1]
+    cp = paraP[2]
+    x0 = 16000
+
+    convergence_analysis(t, x0, ap, bp, cp)
+
 
     pressure_forecast()
     # t = np.linspace(1950,2050,101)
