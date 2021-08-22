@@ -380,7 +380,10 @@ if __name__ == "__main__":
     #bp = 0.12
 
     at = 0.000005
-    bt = -0.001
+    bt = 0.065
+
+    #
+    #
 
 
     #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, dt, x0, pressurei, ap, bp, at, bt), xdata=t, ydata=tTemp)
