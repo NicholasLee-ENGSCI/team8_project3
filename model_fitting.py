@@ -32,35 +32,6 @@ def interpolate_q_total(t):
     ex2 = np.interp(t,tq2,pr2)   
     return ex1+ex2
 
-def dqdt_function(t,q):
-    ''' differentiate to find the rate of change of extraction with respect to time.
-
-        Parameters:
-        -----------
-        t : float
-            Independent variable.
-        q : float 
-            Dependent variable. Total extraction output from function interpolate_q_total.
-        
-        Returns:
-        --------
-        dqdt : float
-            rate of change of total extraction rate.
-
-        Note:
-        -----
-        dqdt = (q[i+1]-q[i])/(t[i+1]-t[i])
-        q is in Tonnes per day and t is in years, so the t needs to convert unit to days. 
-    '''
-    dqdt = []
-    for i in range(0,len(t)-1):
-        a = (q[i+1]-q[i])/((t[i+1]-t[i])) # denominator is multiplied by 365 to convert years to days. 
-        dqdt.append(a)
-    
-    # dqdt of the last data point is assumed to be of same rate as the dqdt of second to last data point.
-    dqdt.append(a)
-    return dqdt
-
 def pressure_ode_model(t, P, P0, q, dqdt, ap, bp, cp):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
     ''' Return the derivative dP/dt at time, t, for given parameters.
 
@@ -171,33 +142,13 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
     ys = 0.*ts						    #initialise solution array
     ys[0] = P0						    #set initial value of solution array
-    
-    #calculating next value before loop so i-1 has a value  {this is more accurate but you get a worse fit so ignore for now}
-    #fk = f(ts[0], ys[0], ys[0], q[0], dqdt[0], *pars)
-    #fk1 = f(ts[0] + dt, ys[0] + dt*fk, ys[0], q[0], dqdt[0], *pars)
-    #ys[1] = ys[0] + dt*((fk + fk1)/2)
-
-    #fk = f(ts[0], ys[0], 5000, q[0], dqdt[0], *pars) 
-    #fk1 = f(ts[0] + dt/2, ys[0] + dt*fk/2, 5000, q[0], dqdt[0], *pars)
-    #fk2 = f(ts[0] + dt/2, ys[0] + dt*fk1/2, 5000, q[0], dqdt[0], *pars)
-    #fk3 = f(ts[0] + dt, ys[0] + dt*fk2, 5000, q[0], dqdt[0], *pars)
-    #ys[1] = ys[0] + dt*((fk + 2*fk1 + 2*fk2 + fk3)/6)
 
     #calculate solution values using Improved Euler                                                                                                                         #{are we using ambient or initial pressure to calcualte rate of change???}
     for i in range(nt):
-
-        #improved eulers
         fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars)
         fk1 = f(ts[i] + dt, ys[i] + dt*fk, ys[i-1], q[i], dqdt[i], *pars)
         ys[i+1] = ys[i] + dt*((fk + fk1)/2)
 
-        #RK45
-        #fk = f(ts[i], ys[i], ys[i-1], q[i], dqdt[i], *pars) 
-        #fk1 = f(ts[i] + dt/2, ys[i] + dt*fk/2, ys[i-1], q[i], dqdt[i], *pars)
-        #fk2 = f(ts[i] + dt/2, ys[i] + dt*fk1/2, ys[i-1], q[i], dqdt[i], *pars)
-        #fk3 = f(ts[i] + dt, ys[i] + dt*fk2, ys[i-1], q[i], dqdt[i], *pars)
-        #ys[i+1] = ys[i] + dt*((fk + 2*fk1 + 2*fk2 + fk3)/6)
-    
 	#Return both arrays contained calculated values
     return ts, ys
 
@@ -401,7 +352,7 @@ if __name__ == "__main__":
 
     bound = np.inf           #np.inf to ignore bounds
     #p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
-    paraP,_ = op.curve_fit(lambda t, ap, bp,cp : fit_pressure(t, dt, x0,'SAME', ap, bp, cp), xdata=t, ydata=wp,)
+    paraP,_ = op.curve_fit(lambda t, ap, bp, cp : fit_pressure(t, dt, x0,'SAME', ap, bp, cp), xdata=t, ydata=wp,)
 
     print(paraP)
     ap = -1.74
@@ -423,13 +374,14 @@ if __name__ == "__main__":
     ax2.plot(tT, temp, 'ro', marker='o')
     tTemp = np.interp(t,tP,wl)
 
-    x0 = 149            #starting pressure value
+    x0 = 149           #starting temperature value
 
     #ap = 0.15
     #bp = 0.12
 
-    at = -0.00001
-    bt = 0.008
+    at = 0.000005
+    bt = -0.001
+
 
     #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, dt, x0, pressurei, ap, bp, at, bt), xdata=t, ydata=tTemp)
     #print(paraT)
@@ -441,7 +393,7 @@ if __name__ == "__main__":
 
     
 
-    timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[ap, bp, at, bt])
+    timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, wp, pars=[ap, bp, at, bt])
     ax2.plot(timei, tempi,'r--')
     
 
