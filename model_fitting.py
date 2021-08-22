@@ -127,15 +127,24 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
     elif (indicator == 'STOP'):
         q = interpolate_q_total(t)
         q = q/86.4
-        q[65:101] = 0
+        # q[65:101] = 0
+        a = q[64]/36
+        for i in range(65,101):
+            q[i] = q[64]-a*(i-65)
     elif (indicator == 'DOUBLE'):
         q = interpolate_q_total(t)
         q = q/86.4
-        q[65:101] = q[64]*2
+        # q[65:101] = q[64]*2
+        a = q[64]/36
+        for i in range(65,101):
+            q[i] = q[64]+a*(i-65)
     elif (indicator == 'HALF'):
         q = interpolate_q_total(t)
         q = q/86.4
-        q[65:101] = q[64]/2
+        # q[65:101] = q[64]/2
+        a = q[64]/72
+        for i in range(65,101):
+            q[i] = q[64]-a*(i-65)
     dqdt = np.gradient(q)
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
@@ -461,5 +470,10 @@ if __name__ == "__main__":
 
 
     pressure_forecast()
-    # t = np.linspace(1950,2050,101)
-    # plot_pressure_model(t,solve_pressure_ode(pressure_ode_model, t, dt, x0, 'SAME', pars=[ap, bp, cp])[1])
+    t = np.linspace(1950,2050,101)
+    y = interpolate_q_total(t)
+    a = y[64]/36
+    for i in range(65,101):
+        y[i] = y[64]-a*(i-65)
+    # plot_pressure_model(t,solve_pressure_ode(pressure_ode_model, t, dt, x0, 'STOP', pars=[ap, bp, cp])[1])
+    # plot_pressure_model(t,y)
