@@ -30,6 +30,7 @@ def interpolate_q_total(t):
     # interpolating two data, then summed to find total q
     ex1 = np.interp(t,tq1,pr1)    
     ex2 = np.interp(t,tq2,pr2)   
+
     return ex1+ex2
 
 def pressure_ode_model(t, P, P0, q, dqdt, ap, bp, cp):            #{remember to check order of parameters match when bug fixing}, consider changing P to x to follow standard notation???, inital or ambient
@@ -41,19 +42,19 @@ def pressure_ode_model(t, P, P0, q, dqdt, ap, bp, cp):            #{remember to 
             Independent variable.
         P : float
             Dependent variable.
+        P0 : float
+            Ambient value of the dependent variable.
         q : float
             total extraction rate.
         dqdt : float
             rate of change of total extraction rate. 
         ap : float
             extraction strength parameter.
-        b : float
+        bb : float
             recharge strength parameter.
-        c : float
+        cp : float
             slow drainage strength parameter. 
-        P0 : float
-            Ambient value of the dependent variable.
-
+        
         Returns:
         --------
         dxdt : float
@@ -119,32 +120,31 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
             'DOUBLE' => production is doubled from year 2014
             'HALF' => production is halved from year 2014
     '''
-    
+    q = interpolate_q_total(t)
+    q = q/86.4
+
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
     if (indicator == 'SAME'):
-        q = interpolate_q_total(t)
-        q = q/86.4
+        temp = 0
+
     elif (indicator == 'STOP'):
-        q = interpolate_q_total(t)
-        q = q/86.4
         # q[65:101] = 0
         a = q[64]/36
         for i in range(65,101):
             q[i] = q[64]-a*(i-65)
+
     elif (indicator == 'DOUBLE'):
-        q = interpolate_q_total(t)
-        q = q/86.4
         # q[65:101] = q[64]*2
         a = q[64]/36
         for i in range(65,101):
             q[i] = q[64]+a*(i-65)
+
     elif (indicator == 'HALF'):
-        q = interpolate_q_total(t)
-        q = q/86.4
         # q[65:101] = q[64]/2
         a = q[64]/72
         for i in range(65,101):
             q[i] = q[64]-a*(i-65)
+
     dqdt = np.gradient(q)
 
     nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
@@ -162,7 +162,43 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
     return ts, ys
 
 def fit_pressure(t, dt, P0, indicator, ap, bp, cp):
-    time, pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])
+    ''' Return the derivative dP/dt at time, t, for given parameters.
+
+        Parameters:
+        -----------
+        t : float
+            Independent variable.
+        dt : float
+            Time step length.
+        P0 : float
+            Ambient value of the dependent variable.
+        indicator: string
+            string that describes the future operation of production. PLEASE REFER TO NOTES TO MORE INFORMATION. 
+        ap : float
+            extraction strength parameter.
+        bp : float
+            recharge strength parameter.
+        cp : float
+            slow drainage strength parameter. 
+        
+        Returns:
+        --------
+        dxdt : float
+            Derivative of dependent variable with respect to independent variable.
+
+        Notes:
+        ------
+        q = {qtotal,qrhyolite,qnotrhyolite}
+        q is found by using interpolate_q_total(t):
+        - 1. interpolating extraction rate 1 and extraction rate 2 to independent variables values that corresponds to input variable t.
+        - 2. summing the two interpolated data.
+
+        Examples:
+        ---------
+        >>> pressure_ode_model(0, 1, 2, 3, 4, 5, 6, 7)
+        = -12
+    '''
+    pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])[1]
     return pressure
 
 def plot_pressure_model(t,y):       
@@ -339,7 +375,6 @@ def find_analytic_temp(t, T0, Tcold, a, b, q):
     
     return
 
-
 def convergence_analysis(t, x0, ap, bp, cp):
     f, ax = plt.subplots(1, 1)
     h_array = np.linspace(1, 2.7, 50)
@@ -380,7 +415,10 @@ if __name__ == "__main__":
     t = np.linspace(1950,2014,65)
 
     tP, wl = np.genfromtxt('gr_p.txt',delimiter=',',skip_header=1).T # water level (gr_p data)
+
+    #Believe this is were mistake is, conversion of water level to pressure then scaling to MPA
     wl = ((wl*997*9.81) - 2909250)*100
+
     wp = np.interp(t,tP,wl)
 
     fig, ax1 = plt.subplots(1)
@@ -398,7 +436,7 @@ if __name__ == "__main__":
 
     bound = np.inf           #np.inf to ignore bounds
     #p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
-    paraP,_ = op.curve_fit(lambda t, ap, bp, cp : fit_pressure(t, dt, x0,'SAME', ap, bp, cp), xdata=t, ydata=wp,)
+    paraP,_ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, x0,'SAME', ap, bp, cp), xdata=t, ydata=wp,)
 
     print(paraP)
     ap = -1.74
@@ -428,9 +466,6 @@ if __name__ == "__main__":
     at = 0.000005
     bt = 0.065
 
-    #
-    #
-
 
     #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, dt, x0, pressurei, ap, bp, at, bt), xdata=t, ydata=tTemp)
     #print(paraT)
@@ -440,19 +475,20 @@ if __name__ == "__main__":
     #at = paraT[0]
     #bt = paraT[1]
 
-    
-
     timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, wp, pars=[ap, bp, at, bt])
     ax2.plot(timei, tempi,'r--')
     
 
     plt.show()
 
+
+
+
     # plot analytic vs numeric solution
     ap = paraP[0]
     bp = paraP[1]
     cp = paraP[2]
-    x0 = 16000  
+    x0 = 160000  
 
     fig, ax3 = plt.subplots(1)
     ax3.plot(timei, pressurei, 'r-', label='Model')
@@ -464,7 +500,7 @@ if __name__ == "__main__":
     ap = paraP[0]
     bp = paraP[1]
     cp = paraP[2]
-    x0 = 16000
+    x0 = 160000
 
     convergence_analysis(t, x0, ap, bp, cp)
 
