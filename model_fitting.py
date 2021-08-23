@@ -292,6 +292,57 @@ def fit_temperature(t, dt, T0, P, ap, bp, at, bt):
     time, temp = solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars = [ap, bp, at, bt])
     return temp
 
+def production_scenarios():
+    '''
+    This function plots all different production scenarios for comparison
+    '''
+    # plotting format 
+    f,ax1 = plt.subplots(nrows=1,ncols=1)
+    # plotting no change 
+    t = np.linspace(1950,2050,101)
+    q0 = interpolate_q_total(t)
+    q0 = q0/86.4
+
+    # operation terminated
+    q1 = interpolate_q_total(t)
+    q1 = q1/86.4
+    a = q1[64]/36
+    for i in range(65,101):
+        q1[i] = q1[64]-a*(i-65)
+
+    # double production
+    q2 = interpolate_q_total(t)
+    q2 = q2/86.4
+    for i in range(65,101):
+        q2[i] = q2[64]+a*(i-65)
+    
+    # half production
+    q3 = interpolate_q_total(t)
+    q3 = q3/86.4
+    b = q3[64]/72
+    for i in range(65,101):
+        q3[i] = q3[64]-b*(i-65)
+
+    ln1 = ax1.plot(t, q0, 'k-', label='maintained production')
+    ln2 = ax1.plot(t, q1, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t, q2, 'g-', label='production doubled')
+    ln4 = ax1.plot(t, q3, 'b-', label='production halved')
+
+    lns = ln1+ln2+ln3+ln4
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns,labs,loc=1)
+    ax1.set_ylabel('Production [tonnes/day???]')
+    ax1.set_xlabel('time [yr]')
+    ax1.set_title('different production scenarios from 2014')
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('production_scenarios.png',dpi=300)
+    return
+
 def pressure_forecast():
     '''
     This function is to extrapolate to year 2050, then plot it 
@@ -477,3 +528,4 @@ if __name__ == "__main__":
         y[i] = y[64]-a*(i-65)
     # plot_pressure_model(t,solve_pressure_ode(pressure_ode_model, t, dt, x0, 'STOP', pars=[ap, bp, cp])[1])
     # plot_pressure_model(t,y)
+    production_scenarios()
