@@ -123,7 +123,7 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
     q = interpolate_q_total(t)
     q = q/86.4
 
-    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)                                {remember to add q and dqdt into paramters}
+    # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)     
     if (indicator == 'SAME'):
         temp = 0
 
@@ -147,7 +147,7 @@ def solve_pressure_ode(f,t, dt, P0, indicator, pars):
 
     dqdt = np.gradient(q)
 
-    nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps	
+    nt = int(np.ceil((t[-1]-t[0])/dt))	#calculating number of steps
     ts = t[0]+np.arange(nt+1)*dt		#initilaise time array
     ys = 0.*ts						    #initialise solution array
     ys[0] = P0						    #set initial value of solution array
@@ -188,18 +188,13 @@ def fit_pressure(t, dt, P0, indicator, ap, bp, cp):
 
         Notes:
         ------
-        q = {qtotal,qrhyolite,qnotrhyolite}
-        q is found by using interpolate_q_total(t):
-        - 1. interpolating extraction rate 1 and extraction rate 2 to independent variables values that corresponds to input variable t.
-        - 2. summing the two interpolated data.
+            Helper method to solve for Pressure values
 
         Examples:
         ---------
-        >>> pressure_ode_model(0, 1, 2, 3, 4, 5, 6, 7)
-        = -12
+
     '''
-    pressure = solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])[1]
-    return pressure
+    return solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])[1]
 
 def plot_pressure_model(t,y):       
     '''
@@ -325,8 +320,7 @@ def solve_temperature_ode(f,t, dt, T0, P, pars):
     return ts, ys
 
 def fit_temperature(t, dt, T0, P, ap, bp, at, bt):
-    time, temp = solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars = [ap, bp, at, bt])
-    return temp
+    return solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars = [ap, bp, at, bt])[1]
 
 def pressure_forecast():
     '''
@@ -460,12 +454,10 @@ if __name__ == "__main__":
 
     x0 = 149           #starting temperature value
 
-    #ap = 0.15
-    #bp = 0.12
-
-    at = 0.000005
-    bt = 0.065
-
+    ap = 0.15
+    bp = 0.12
+    #at = 0.000005
+    #bt = 0.065
 
     #paraT,_ = op.curve_fit(lambda t, at, bt: fit_temperature(t, dt, x0, pressurei, ap, bp, at, bt), xdata=t, ydata=tTemp)
     #print(paraT)
