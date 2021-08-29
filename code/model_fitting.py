@@ -23,9 +23,9 @@ def calculate_pressure(t, initial):
         water_interp[i] = math.sqrt(37329 - (i + 1.068182)**2) + 104.7955
 
     # Believe this is were mistake is, conversion of water level to pressure then scaling to MPA
-    #pressure = ((water_interp * 997 * 9.81) - 2909250)
+    # pressure = ((water_interp * 997 * 9.81) - 2909250)
     pressure = (water_interp-500)*997*9.81
-    #pressure = water_interp
+    # pressure = water_interp
 
     return pressure #+ 1900000
 
