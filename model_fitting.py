@@ -18,7 +18,7 @@ def calculate_pressure(t, initial):
     # Calculation of water lvl from 1850 - 1875
     # Ratouis2017, figure 16, gives us historical water data
     # Can be approximated to a circle function (x - 1.068182)²  +  (y - 104.7955)²  =  3.732914e+4
-    # Calculated using http://www.1728.org/circle2.htm, parameters {0, 298; 35, 295; 15,297} respectively
+    # Calculated using http://www.1728.org/circle2.htm, parameters {0, 298; 15, 297.5; 35,295} respectively
     for i in range(0, 34):
         water_interp[i] = math.sqrt(37329 - (i + 1.068182)**2) + 104.7955
 
@@ -220,6 +220,29 @@ def fit_pressure(t, dt, P0, indicator, ap, bp, cp):
     '''
     return solve_pressure_ode(pressure_ode_model, t, dt, P0, indicator, pars=[ap, bp, cp])[1]
 
+def plot_pressure():
+    fig, ax1 = plt.subplots(1)
+    ax2 = ax1.twinx()
+
+    time = np.linspace(1950, 2014, 65)
+    water_pressure = calculate_pressure(t, 300)  # remember to implement initial value later (300)
+
+    ax1.plot(t, water_pressure, 'bo', marker='o')
+
+    dt = 1  # step size
+    x0 = water_pressure[0]  # starting pressure value (change this to a researched value later)
+
+    para_pressure, _ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, x0, 'SAME', ap, bp, cp), xdata=time,
+                                   ydata=water_pressure, p0=[0.15, 0.12, 0.6])
+    print(para_pressure)
+    ap = para_pressure[0]
+    bp = para_pressure[1]
+    cp = para_pressure[2]
+
+    time_fit, pressure_fit = solve_pressure_ode(pressure_ode_model, time, dt, x0, 'SAME', pars=[ap, bp, cp])
+    ax1.plot(time_fit, pressure_fit, 'b--')
+
+    # plt.show() for testing
 
 def plot_pressure_model(t, y):
     '''
@@ -348,6 +371,29 @@ def solve_temperature_ode(f, t, dt, T0, P, pars):
 
 def fit_temperature(t, dt, T0, P, alpha, bt):
     return solve_temperature_ode(temperature_ode_model, t, dt, T0, P, pars=[alpha, bt])[1]
+
+def plot_temperature():
+    time, temp = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # Temperature (gr_T data)
+    ax2.plot(tT, temp, 'ro', marker='o')
+
+    time_temp = np.interp(t, tT, temp)
+    x0 = 149  # starting temperature value
+    alpha = 0
+    # at = 0.000005
+    # bt = 0.065
+
+    # paraT,_ = op.curve_fit(lambda t, alpha, bt: fit_temperature(t, dt, x0, pressurei, alpha, bt), xdata=t, ydata=tTemp)
+    # print(paraT)
+    # at = 0.1
+    # bt = 0
+
+    # alpha = paraT[0]
+    # bt = paraT[1]
+
+    # timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[alpha, bt])
+    # ax2.plot(timei, tempi,'r--')
+
+    plt.show()
 
 
 def production_scenarios():
@@ -485,58 +531,6 @@ if __name__ == "__main__":
     # plot_pressure_model(tp,qtot)
     # total rate of change of extraction rate
     # plot_pressure_model(tp,dqdt_function(tp,qtot))
-
-    # plotting given water level data
-    t = np.linspace(1950, 2014, 65)
-
-    wp = calculate_pressure(t, 300)
-
-    fig, ax1 = plt.subplots(1)
-    ax2 = ax1.twinx()
-    ax1.plot(t, wp, 'bo', marker='o')
-
-    dt = 1  # step size
-    x0 = wp[0]  # starting pressure value
-
-    bound = np.inf  # np.inf to ignore bounds
-    # p0=[0.15, 0.12, 0.6], bounds=([-bound,-bound,-bound],[bound,bound,bound])
-    paraP, _ = op.curve_fit(lambda t, ap, bp, cp: fit_pressure(t, dt, x0, 'SAME', ap, bp, cp), xdata=t, ydata=wp, p0=[0.15, 0.12, 0.6])
-    print(paraP)
-
-    ap = paraP[0]
-    bp = paraP[1]
-    cp = paraP[2]
-
-    t = np.linspace(1950, 2014, 65)
-
-    timei, pressurei = solve_pressure_ode(pressure_ode_model, t, dt, x0, 'SAME', pars=[ap, bp, cp])
-    ax1.plot(timei, pressurei, 'b--')
-
-    plt.show()
-
-    # plotting given temperature data
-    tT, temp = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # Temperature (gr_T data)
-    ax2.plot(tT, temp, 'ro', marker='o')
-
-
-    tTemp = np.interp(t, tT, temp)
-    x0 = 149  # starting temperature value
-    alpha = 0
-    # at = 0.000005
-    # bt = 0.065
-
-    #paraT,_ = op.curve_fit(lambda t, alpha, bt: fit_temperature(t, dt, x0, pressurei, alpha, bt), xdata=t, ydata=tTemp)
-    #print(paraT)
-    # at = 0.1
-    # bt = 0
-
-    #alpha = paraT[0]
-    #bt = paraT[1]
-
-    #timei, tempi = solve_temperature_ode(temperature_ode_model, t, dt, x0, pressurei, pars=[alpha, bt])
-    #ax2.plot(timei, tempi,'r--')
-
-    plt.show()
 
     # plot analytic vs numeric solution
     x0 = 160000
