@@ -147,22 +147,22 @@ def solve_pressure_ode(f, t, dt, P0, indicator, pars):
     # q = q / 86.4
 
     # total extraction is found by interpolating two extraction rates given and summing them (done using the interpolate_q_total() function)     
-    if (indicator == 'SAME'):
+    if indicator == 'SAME':
         temp = 0
 
-    elif (indicator == 'STOP'):
+    elif indicator == 'STOP':
         # q[65:101] = 0
         a = q[64] / 36
         for i in range(65, 101):
             q[i] = q[64] - a * (i - 65)
 
-    elif (indicator == 'DOUBLE'):
+    elif indicator == 'DOUBLE':
         # q[65:101] = q[64]*2
         a = q[64] / 36
         for i in range(65, 101):
             q[i] = q[64] + a * (i - 65)
 
-    elif (indicator == 'HALF'):
+    elif indicator == 'HALF':
         # q[65:101] = q[64]/2
         a = q[64] / 72
         for i in range(65, 101):
