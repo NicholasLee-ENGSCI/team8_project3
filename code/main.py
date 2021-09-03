@@ -7,43 +7,49 @@ import numpy as np
 fig, ax1 = plt.subplots(1)
 ax2 = ax1.twinx()
 
-step_p = 0.5  # step size
-initial_p = 5000  # starting pressure value, PA
-points = int(1 / step_p)
+# all parameters should be able to be changed for better fits without breaking the program
+time0 = 1950                                    # starting time
+time1 = 2014                                    # ending time
 
-time_p = np.linspace(1950, 2014, 65 * points - 1)
-water_pressure = p.calculate(time_p, step_p)  # remember to implement initial value later (300)
-ax1.plot(time_p, water_pressure, 'bo', marker='o')
-ap, bp, cp = p.fit(time_p, water_pressure, step_p, initial_p)
-p0 = 0
+# PRESSURE
+dt_p = 1                                        # step size
+x0_p = 5000                                     # starting pressure value, PA
+p0 = 0                                          # hydrostatic pressure at recharge source
 
-time_fit, pressure_fit = p.solve_ode(p.ode_model, time_p, step_p, initial_p, 'SAME', pars=[ap, bp, cp, p0])
+# converting water level to pressure and plotting, the plot is gonna look weird because I changed it for a
+# better fit will fix this graph later this is not that important right now
+t_p, pressure_data = p.interp(time0, time1, dt_p)
+ax1.plot(t_p, pressure_data, 'bo', marker='o')
+
+# estimating parameters still a basic implementation read note in fit for details
+ap, bp, cp = p.fit(t_p, pressure_data, dt_p, x0_p, p0)
+
+# numerical solution and plotting
+time_fit, pressure_fit = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[ap, bp, cp, p0])
 ax1.plot(time_fit, pressure_fit, 'b--')
 
-time, temp_data = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # temperature (gr_t data)
 
-# need to convert pressure to 11 points so it actually fits???
-# fucking for loop
+# TEMPERATURE
+dt_t = 1                                    # step size
+x0_t = 149                                  # starting temperature
+t0 = 147                                    # temperature outside CV/ conduction source
 
-step_t = 5
-initial_t = 149
-t0 = 147
-time_t, temp_data = t.calculate(time, step_t)
+# interpolating temp will also look weird will fix later
+t_t, temp_data = t.interp(time0, time1, dt_t)
+ax2.plot(t_t, temp_data, 'ro', marker='o')
 
-pressure_t = []
-for i in range(len(time_t)):
-    for j in range(len(time_p)):
-        if time_t[i] == time_p[j]:
-            pressure_t.append(pressure_fit[j])
+# estimating parameters still a basic implementation read notes in fit for details
+alpha, bt = t.fit(t_t, temp_data, dt_t, x0_t, pressure_fit, p0, t0)
 
-ax2.plot(time, temp_data, 'ro', marker='o')
-alpha, bt = t.fit(time_t, temp_data, step_t, initial_t, pressure_t, p0, t0)
+# numerical solution and plotting
+timeT_fit, temp_fit = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, pressure_fit, pars=[alpha, bt, p0, t0])
+ax2.plot(timeT_fit, temp_fit, 'r--')
 
-#alpha = 0.000001
-#bt = 0.08
+# this is the only plotting that should be in the main file because this plot requires data from temp and pressure
+# all other plots should be in their respective parent file e.g. pressure scenarios in pressure
+plt.show()
 
-timet_fit, temp_fit = t.solve_ode(t.ode_model, time_t, step_t, initial_t, pressure_t, pars=[alpha, bt, p0, t0])
-ax2.plot(timet_fit, temp_fit, 'r--')
+# functions for plotting the scenarios and whatever else will go here but the actual code will be in their respect func.
 
 
-plt.show()  # for testing
+
