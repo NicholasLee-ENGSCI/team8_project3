@@ -33,7 +33,7 @@ if run_plot1:
     ax2.set_ylabel('water level [m]')
     ax2.set_xlabel('time [yr]')
     ax1.set_xlabel('time [yr]')
-    ax2.set_title('The provided data on water level and total production rate')
+    ax2.set_title('water level and total production rate data')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
@@ -83,7 +83,7 @@ if run_plot2:
     ax2.set_ylabel('pressure [bar]')
     ax2.set_xlabel('time [yr]')
     ax1.set_xlabel('time [yr]')
-    ax2.set_title('The calculated pressure and provided data on total production rate')
+    ax2.set_title('total production rate data and calculated pressure')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
@@ -118,7 +118,7 @@ if run_plot3:
     ax2.set_ylabel('Temperature [degC]')
     ax2.set_xlabel('time [yr]')
     ax1.set_xlabel('time [yr]')
-    ax2.set_title('The provided data on temperature and total production rate')
+    ax2.set_title('temperature and total production rate data')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
