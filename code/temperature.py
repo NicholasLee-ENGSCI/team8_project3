@@ -186,7 +186,7 @@ def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
 
     lns = ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=2)
+    ax1.legend(lns, labs, loc=3)
     ax1.set_ylabel('temperature [degC]')
     ax1.set_xlabel('time [yr]')
     ax1.set_title('Temperature predictions for different scenarios from 2014')
