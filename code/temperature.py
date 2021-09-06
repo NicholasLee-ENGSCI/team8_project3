@@ -2,6 +2,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy import optimize as op
+import pressure as p
 
 
 def interp(t0, t1, dt):
@@ -112,6 +113,7 @@ def solve_ode(f, t0, t1, dt, x0, pr, pars):
     ts = t0 + np.arange(n + 1) * dt  # time array
     ys = 0. * ts  # array to store solution values
     ys[0] = x0  # set initial value of solution array
+        
 
     # calculate solution values using Improved Euler
     for i in range(n):
@@ -139,3 +141,60 @@ def fit(t, temp, dt, x0, pr, p0, temp0):
     b = para[1]
 
     return a, b
+
+def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
+    '''
+    time0 = ...
+    .
+    .
+    .
+    t = array 
+        array of time values corresponding to the extrapolated pressure values
+    pr1 = array
+        array of "no change" extrapolation pressure value 
+    pr2 = array
+        array of "no production" extrapolation pressure value 
+    pr3 = array
+        array of "double production" extrapolation pressure value 
+    pr4 = array
+        array of "half production" extrapolation pressure value 
+    .
+    .
+    .
+    '''
+    # plotting format
+    f, ax1 = plt.subplots(nrows=1, ncols=1)
+
+    n = int(np.ceil((t1 - time0) / dt))  # number of steps
+    ts = time0 + np.arange(n + 1) * dt  # time array
+
+    p_no_change = np.interp(ts,t,pr1)
+    p_no_prod = np.interp(ts,t,pr2)
+    p_double_prod = np.interp(ts,t,pr3)
+    p_half_prod = np.interp(ts,t,pr4)
+
+    tx, t_no_change  = solve_ode(ode_model, time0, t1, dt, x0, p_no_change, pars=[a, b, p0, t0])
+    t_no_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_no_prod, pars=[a, b, p0, t0])[1]
+    t_double_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_double_prod, pars=[a, b, p0, t0])[1]
+    t_half_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_half_prod, pars=[a, b, p0, t0])[1]
+
+    # plotting the different scenarios against each other
+    ln1 = ax1.plot(tx, t_no_change, 'k--o', label='maintained production')
+    ln2 = ax1.plot(tx, t_no_prod, 'r*', label='operation terminated')
+    ln3 = ax1.plot(tx, t_double_prod, 'g.', label='production doubled')
+    ln4 = ax1.plot(tx, t_half_prod, 'b-', label='production halved')
+
+    lns = ln1 + ln2 + ln3 + ln4
+    labs = [l.get_label() for l in lns]
+    ax1.legend(lns, labs, loc=2)
+    ax1.set_ylabel('temperature [degC]')
+    ax1.set_xlabel('time [yr]')
+    ax1.set_title('Temperature predictions for different scenarios from 2014')
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('temperature_forecast.png', dpi=300)
+    return

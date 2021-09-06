@@ -246,7 +246,7 @@ def helper(t, dt, x0, indicator, a, b, c, p0):
         x0 : float
             Initial value of the dependent variable.
         indicator: string
-            String that describes the future operation of production. PLEASE REFER TO NOTES TO MORE INFORMATION.
+            String that describes the future operation of production. 
         a : float
             Extraction strength parameter.
         b : float

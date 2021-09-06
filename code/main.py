@@ -70,7 +70,14 @@ else:
     plt.savefig('best_fit.png',dpi=300)
 
 # forecasting pressure for different production scenarios from 2014 to 2050
-p.forecast(1950,2050,dt_p,x0_p,ap,bp,cp,p0)
+p.forecast(time0,2050,dt_p,x0_p,ap,bp,cp,p0)
+
+# predicting temperature
+tp_pred, y_no_change = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'SAME', pars=[ap,bp,cp, p0])
+y_stop = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'STOP', pars=[ap,bp,cp, p0])[1]
+y_double = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'DOUBLE', pars=[ap,bp,cp, p0])[1]
+y_half = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'HALF', pars=[ap,bp,cp, p0])[1]
+t.forecast(time0, 2050, dt_t, x0_t, tp_pred, y_no_change, y_stop, y_double, y_half, alpha, bt, p0, t0)
 
 def quant_misfit():
     '''
@@ -129,5 +136,7 @@ def quant_misfit():
         plt.show()
     else:
         plt.savefig('temperature_misfit.png',dpi=300)
+    return
 
+# calling the misfit plot function 
 quant_misfit()
