@@ -29,9 +29,9 @@ def ode_model(t, temp, pr, a, b, p0, t0):
         at : float
             cold water inflow parameter.
         bp : float
-            cold water inflow parameter.
+            cold water inflow parameter (recharge strength parameter). 
         ap : float
-            cold water inflow parameter.
+            cold water inflow parameter (extraction strength parameter).
         bt : float
             conduction strength parameter.
         P : float

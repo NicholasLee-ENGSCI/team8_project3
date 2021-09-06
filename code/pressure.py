@@ -196,7 +196,7 @@ def solve_ode(f, t0, t1, dt, x0, indicator, pars):
     ys[0] = x0  # set initial value of solution array
 
     q = interpolate_q_total(ts)
-    q = q / 86.4
+    q = q / 86.4 # 1 kg/s is equivalent to 86.4 tonnes/day
 
     # total extraction is found by interpolating two extraction rates given and summing them (done using the
     # interpolate_q_total() function)
@@ -418,10 +418,10 @@ def forecast(t0, t1, dt, x0, a, b, c, p0):
     y_half = solve_ode(ode_model, t0, t1, dt, x0, 'HALF', pars=[a, b, c, p0])[1]
 
     # plotting the different scenarios against each other
-    ln1 = ax1.plot(t, y_no_change / 10 ** 6, 'k-', label='maintained production')
-    ln2 = ax1.plot(t, y_stop / 10 ** 6, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t, y_double / 10 ** 6, 'g-', label='production doubled')
-    ln4 = ax1.plot(t, y_half / 10 ** 6, 'b-', label='production halved')
+    ln1 = ax1.plot(t, y_no_change / 10 ** 5, 'k-', label='maintained production')
+    ln2 = ax1.plot(t, y_stop / 10 ** 5, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t, y_double / 10 ** 5, 'g-', label='production doubled')
+    ln4 = ax1.plot(t, y_half / 10 ** 5, 'b-', label='production halved')
 
     lns = ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
