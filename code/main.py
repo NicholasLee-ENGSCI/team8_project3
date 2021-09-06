@@ -54,8 +54,8 @@ lns = ln1+ln2+ln3+ln4
 labs = [l.get_label() for l in lns]
 ax1.legend(lns,labs,loc=3)
 
-ax1.set_ylabel('pressure [bar]]')
-ax2.set_ylabel('temperature [degC]]')
+ax1.set_ylabel('pressure [bar]')
+ax2.set_ylabel('temperature [degC]')
 ax2.set_xlabel('time [yr]')
 ax1.set_xlabel('time [yr]')
 ax2.set_title('Best fit model for given pressure and temperature data')
@@ -69,7 +69,65 @@ if not save_figure:
 else:
     plt.savefig('best_fit.png',dpi=300)
 
-# functions for plotting the scenarios and whatever else will go here but the actual code will be in their respect func.
-
+# forecasting pressure for different production scenarios from 2014 to 2050
 p.forecast(1950,2050,dt_p,x0_p,ap,bp,cp,p0)
 
+def quant_misfit():
+    '''
+    quantify the misfit between the best fit model and the data, then visualise it. 
+    '''
+    # quantifying misfit for pressure LPM ODE
+    fig, axes = plt.subplots(1,2)
+    ln1 = axes[0].plot(tp_provided, p_plot/100000, 'bo', marker='o', label='data')
+    px_plot = np.interp(tp_provided, time_fit, pressure_fit)
+    ln2 = axes[0].plot(tp_provided, px_plot/100000, 'k-', label='ap = -1.067\nbp = -9.209e-3\ncp = 8.729e+1')
+
+    lns = ln1+ln2
+    labs = [l.get_label() for l in lns]
+    axes[0].legend(lns,labs,loc=4)
+    axes[0].set_ylabel('pressure [bar]')
+    axes[0].set_xlabel('time [yr]')
+    axes[0].set_title('best fit pressure LPM ODE model')
+
+    p_misfit = px_plot - p_plot
+    axes[1].plot(tp_provided, np.zeros(len(tp_provided)), 'k--')
+    axes[1].plot(tp_provided, p_misfit/100000, 'rx')
+
+    axes[1].set_ylabel('pressure misfit [bar]')
+    axes[1].set_xlabel('time [yr]')
+    axes[1].set_title('best fit pressure LPM ODE model')
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_misfit.png',dpi=300)
+
+    # quantifying misfit for temperature LPM ODE
+    fig, axes = plt.subplots(1,2)
+    ln1 = axes[0].plot(tT_provided, T_provided, 'bo', marker='o', label='data')
+    Tx_plot = np.interp(tT_provided, timeT_fit, temp_fit)
+    ln2 = axes[0].plot(tT_provided, Tx_plot, 'k-', label='alpha = 8.409e-7\nbt = 6.355e-2')
+
+    lns = ln1+ln2
+    labs = [l.get_label() for l in lns]
+    axes[0].legend(lns,labs,loc=4)
+    axes[0].set_ylabel('temperature [degC]')
+    axes[0].set_xlabel('time [yr]')
+    axes[0].set_title('best fit temperature LPM ODE model')
+
+    T_misfit = Tx_plot - T_provided
+    axes[1].plot(tT_provided, np.zeros(len(tT_provided)), 'k--')
+    axes[1].plot(tT_provided, T_misfit, 'rx')
+
+    axes[1].set_ylabel('temperature misfit [degC]')
+    axes[1].set_xlabel('time [yr]')
+    axes[1].set_title('best fit temperature LPM ODE model')
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('temperature_misfit.png',dpi=300)
+
+quant_misfit()
