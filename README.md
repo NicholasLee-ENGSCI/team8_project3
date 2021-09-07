@@ -27,4 +27,6 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **pressure_forecast.png** : plot of pressure forecast for different production rate scenarios.
 
+- **pressure_forecast_supplement.png** : plot of rate of pressure change forecast for different production rate scenarios. dashed line shows the rate of pressure change in which the Rotorua geothermal system is not recovering (rate of pressure change must be greater than 0 at all times to show recovery). 
+
 - **temperature_forecast.png** : plot of temperature forecast for different production rate scenarios (temperature is not directly dependent on production rates, but it is dependent on pressure values that is dependent on production rates).
