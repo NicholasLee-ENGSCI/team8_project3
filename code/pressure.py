@@ -311,9 +311,13 @@ def fit(t, wp, dt, x0, p0):
             no idea about covariance atm
 
     """
+    # para, _ = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
+    #                        ydata=wp, p0=[0.15, 0.12, 0.6],
+    #                        bounds=((-np.inf, -np.inf, -np.inf), (np.inf, np.inf, np.inf)))
+
     para, _ = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
                            ydata=wp, p0=[0.15, 0.12, 0.6],
-                           bounds=((-np.inf, -np.inf, -np.inf), (np.inf, np.inf, np.inf)))
+                           bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)))
 
     print(para)  # for testing
     a = para[0]

@@ -140,3 +140,13 @@ def quant_misfit():
 
 # calling the misfit plot function 
 quant_misfit()
+
+# calculating porosity
+# ap = 1.41e-3
+# bp = 5.95e-2
+# cp = 8.5e-3
+g = 9.81
+A = 1.5e+7
+S0 = 0.3
+print("the estimated porosity through inverse modelling is:")
+print((g*(ap-bp*cp))/((ap**2)*A*(1-S0)))
