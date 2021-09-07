@@ -61,7 +61,7 @@ def interp(t0, t1, dt):
 
     # Conversion of water level to pressure  **this needs a revision kinda pulled this out my ass
     # we need a reference point atm the -2909250 + 5000 is our reference but why???
-    pr = ((water_interp * 997 * 9.81) - 2909250) + 5000
+    pr = ((water_interp-297.4) * 997 * 9.81) + 5000
 
     return t, pr
 
@@ -96,7 +96,7 @@ def interpolate_q_total(t):
     ex1 = np.interp(t, tq1, pr1)
     ex2 = np.interp(t, tq2, pr2)
 
-    return ex1
+    return ex1-ex2
 
 
 def ode_model(t, pr, q, dqdt, a, b, c, p0):
@@ -315,16 +315,20 @@ def fit(t, wp, dt, x0, p0):
     #                        ydata=wp, p0=[0.15, 0.12, 0.6],
     #                        bounds=((-np.inf, -np.inf, -np.inf), (np.inf, np.inf, np.inf)))
 
-    para, _ = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
+    #estimation of anual rainfall taking from ratoius2017 then converted to pressure change
+    sigma = [0.9*997*9.81]*len(t)
+
+    para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
                            ydata=wp, p0=[0.15, 0.12, 0.6],
-                           bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)))
+                           bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)),
+                           sigma=sigma)
 
     print(para)  # for testing
     a = para[0]
     b = para[1]
     c = para[2]
 
-    return a, b, c
+    return para, cov
 
 
 def production_scenarios(t0, t1, dt):
@@ -421,64 +425,18 @@ def forecast(t0, t1, dt, x0, a, b, c, p0):
     y_double = solve_ode(ode_model, t0, t1, dt, x0, 'DOUBLE', pars=[a, b, c, p0])[1]
     y_half = solve_ode(ode_model, t0, t1, dt, x0, 'HALF', pars=[a, b, c, p0])[1]
 
-    # converting pressure values from units of Pa to Bar
-    y_no_change = y_no_change / 10 ** 5
-    y_stop = y_stop / 10 ** 5
-    y_double = y_double / 10 ** 5
-    y_half = y_half / 10 ** 5
-
     # plotting the different scenarios against each other
-    ln1 = ax1.plot(t, y_no_change, 'k-', label='maintained production')
-    ln2 = ax1.plot(t, y_stop, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t, y_double, 'g-', label='production doubled')
-    ln4 = ax1.plot(t, y_half, 'b-', label='production halved')
+    ln1 = ax1.plot(t, y_no_change / 10 ** 5, 'k-', label='maintained production')
+    ln2 = ax1.plot(t, y_stop / 10 ** 5, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t, y_double / 10 ** 5, 'g-', label='production doubled')
+    ln4 = ax1.plot(t, y_half / 10 ** 5, 'b-', label='production halved')
 
     lns = ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=4)
-    ax1.set_ylabel('Pressure [bar]')
+    ax1.legend(lns, labs, loc=2)
+    ax1.set_ylabel('Pressure [MPa]')
     ax1.set_xlabel('time [yr]')
     ax1.set_title('Pressure predictions for different scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('pressure_forecast.png', dpi=300)
-
-    # plotting rate of change of Pressure 
-    f, ax2 = plt.subplots(nrows=1, ncols=1)
-
-    # finding the rate of change of pressure predictions
-    dy_no_change = np.gradient(y_no_change)
-    dy_stop = np.gradient(y_stop)
-    dy_double = np.gradient(y_double)
-    dy_half = np.gradient(y_half)
-
-    # we are only interested in year 2014 and beyond
-    dy_no_ch = []
-    dy_st = []
-    dy_do = []
-    dy_ha = []
-    dy_no_ch = np.copy(dy_no_change[64:-1])
-    dy_st = np.copy(dy_stop[64:-1])
-    dy_do = np.copy(dy_double[64:-1])
-    dy_ha = np.copy(dy_half[64:-1])
-    t_pred = np.copy(t[64:-1])
-    
-    ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery impacted')
-    ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintained production')
-    ln2 = ax2.plot(t_pred, dy_st, 'r-', label='operation terminated')
-    ln3 = ax2.plot(t_pred, dy_do, 'g-', label='production doubled')
-    ln4 = ax2.plot(t_pred, dy_ha, 'b-', label='production halved')
-
-    lns = ln0 + ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc=4)
-    ax2.set_ylabel('rate of change of pressure')
-    ax2.set_xlabel('time [yr]')
-    ax2.set_title('pressure change rate predictions for different scenarios from 2014')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False

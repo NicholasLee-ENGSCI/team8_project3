@@ -14,21 +14,21 @@ time1 = 2014                                    # ending time
 # PRESSURE
 dt_p = 1                                        # step size
 x0_p = 5000                                     # starting pressure value, PA
-p0 = 0                                          # hydrostatic pressure at recharge source
+p0 = 5000                                       # hydrostatic pressure at recharge source assuming shallow inflow scott2016 pg297
 
 # converting water level to pressure and plotting, the plot is gonna look weird because I changed it for a
 # better fit will fix this graph later this is not that important right now
 t_p, pressure_data = p.interp(time0, time1, dt_p)  
 
-tp_provided, p_provided = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # given pressure data  
+tp_provided, p_provided = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # given pressure data
 p_plot = np.interp(tp_provided, t_p, pressure_data) # the pressure calculated from water level is interpolated to match the time we are provided
 ln1 = ax1.plot(tp_provided, p_plot/100000, 'bo', marker='o', label='pressure data')  # pressure data is converted from Pa to bar (1 Pa = 1.e-5 bar)
 
 # estimating parameters still a basic implementation read note in fit for details
-ap, bp, cp = p.fit(t_p, pressure_data, dt_p, x0_p, p0)
+para_p, cov_p = p.fit(t_p, pressure_data, dt_p, x0_p, p0)
 
 # numerical solution and plotting
-time_fit, pressure_fit = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[ap, bp, cp, p0])
+time_fit, pressure_fit = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[para_p[0], para_p[1], para_p[2], p0])
 ln2 = ax1.plot(time_fit, pressure_fit/100000, 'b-', label='pressure best fit')  # pressure_fit data is converted from Pa to bar (1 Pa = 1.e-5 bar) 
 
 
@@ -70,13 +70,13 @@ else:
     plt.savefig('best_fit.png',dpi=300)
 
 # forecasting pressure for different production scenarios from 2014 to 2050
-p.forecast(time0,2050,dt_p,x0_p,ap,bp,cp,p0)
+p.forecast(time0,2050,dt_p,x0_p,para_p[0],para_p[1],para_p[2],p0)
 
 # predicting temperature
-tp_pred, y_no_change = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'SAME', pars=[ap,bp,cp, p0])
-y_stop = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'STOP', pars=[ap,bp,cp, p0])[1]
-y_double = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'DOUBLE', pars=[ap,bp,cp, p0])[1]
-y_half = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'HALF', pars=[ap,bp,cp, p0])[1]
+tp_pred, y_no_change = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'SAME', pars=[para_p[0],para_p[1],para_p[2], p0])
+y_stop = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'STOP', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
+y_double = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'DOUBLE', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
+y_half = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'HALF', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
 t.forecast(time0, 2050, dt_t, x0_t, tp_pred, y_no_change, y_stop, y_double, y_half, alpha, bt, p0, t0)
 
 def quant_misfit():
@@ -143,10 +143,24 @@ quant_misfit()
 
 # calculating porosity
 # ap = 1.41e-3
-# bp = 5.95e-2
-# cp = 8.5e-3
+# para_p[1] = 5.95e-2
+# para_p[2] = 8.5e-3
 g = 9.81
 A = 1.5e+7
 S0 = 0.3
 print("the estimated porosity through inverse modelling is:")
-print((g*(ap-bp*cp))/((ap**2)*A*(1-S0)))
+print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
+
+
+#Unncertainty
+f, ax = plt.subplots(nrows=1, ncols=1)
+
+ps = np.random.multivariate_normal(para_p, cov_p, 100)
+for pi in ps:
+    time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
+    ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='Unncertainty')
+
+v = 0.03
+p_provided = (p_provided * 997 * 9.81) - 2909250 + 5000
+ax.errorbar(tp_provided, p_provided/100000, yerr=v, fmt='ro', label='data')
+plt.show()
