@@ -13,8 +13,6 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **given_data_3.png** : plot of given data (temperature and total production rate, q1).
 
-- **plotting_data.py** : python script used to visualise the provided data (given_data_1.png, given_data_2.png, given_data_3.png is produced).
-
 ### Suitable
 
 - **bestfit.png** : plot of best fit pressure and temperature LPM ODE models.
