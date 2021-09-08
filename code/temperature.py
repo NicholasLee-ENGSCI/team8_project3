@@ -134,13 +134,15 @@ def helper(t, dt, x0, pr, a, b, p0, temp0):
 
 
 def fit(t, temp, dt, x0, pr, p0, temp0):
-    para, _ = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp, p0=(0.000001, 0.08))
+    sigma = [2]*len(t)
+
+    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp, p0=(0.000001, 0.08), sigma=sigma)
 
     print(para)  # for testing
     a = para[0]
     b = para[1]
 
-    return a, b
+    return para, cov
 
 def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
     '''

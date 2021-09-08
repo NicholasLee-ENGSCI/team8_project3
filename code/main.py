@@ -7,9 +7,9 @@ import numpy as np
 # plotting the given data
 
 # boolean variable to run the dual plot 
-run_plot1 = True # plotting the water level and total production rate  
-run_plot2 = True # conversion from water level to pressure 
-run_plot3 = True # plotting the temperature and total production rate
+run_plot1 = False # plotting the water level and total production rate
+run_plot2 = False # conversion from water level to pressure
+run_plot3 = False # plotting the temperature and total production rate
 
 # the influence of borehole closure program on the water level recovery
 if run_plot1:
@@ -170,10 +170,10 @@ tT_provided, T_provided = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1
 ln3 = ax2.plot(tT_provided, T_provided, 'ro', marker='o', label='temperature data')
 
 # estimating parameters still a basic implementation read notes in fit for details
-alpha, bt = t.fit(t_t, temp_data, dt_t, x0_t, pressure_fit, p0, t0)
+para_t, cov_t = t.fit(t_t, temp_data, dt_t, x0_t, pressure_fit, p0, t0)
 
 # numerical solution and plotting
-timeT_fit, temp_fit = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, pressure_fit, pars=[alpha, bt, p0, t0])
+timeT_fit, temp_fit = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, pressure_fit, pars=[para_t[0], para_t[1], p0, t0])
 ln4 = ax2.plot(timeT_fit, temp_fit, 'r-', label='temperature best fit')
 
 lns = ln1+ln2+ln3+ln4
@@ -203,7 +203,7 @@ tp_pred, y_no_change = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'SAME', pa
 y_stop = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'STOP', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
 y_double = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'DOUBLE', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
 y_half = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'HALF', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
-t.forecast(time0, 2050, dt_t, x0_t, tp_pred, y_no_change, y_stop, y_double, y_half, alpha, bt, p0, t0)
+t.forecast(time0, 2050, dt_t, x0_t, tp_pred, y_no_change, y_stop, y_double, y_half, para_t[0], para_t[1], p0, t0)
 
 def quant_misfit():
     '''
@@ -278,15 +278,52 @@ print("the estimated porosity through inverse modelling is:")
 print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
 
 
-#Unncertainty
+#Uncertainty
+
 f, ax = plt.subplots(nrows=1, ncols=1)
 
 ps = np.random.multivariate_normal(para_p, cov_p, 100)
 for pi in ps:
     time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-    ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='Unncertainty')
+    ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='Uncertainty')
+
+    time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
+    ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
+    ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'b-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
+    ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
+    ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='Uncertainty')
 
 v = 0.03
 p_provided = (p_provided * 997 * 9.81) - 2909250 + 5000
 ax.errorbar(tp_provided, p_provided/100000, yerr=v, fmt='ro', label='data')
+plt.show()
+
+
+f, ax = plt.subplots(nrows=1, ncols=1)
+
+ps = np.random.multivariate_normal(para_t, cov_t, 100)
+for pi in ps:
+    time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, y_no_change, pars=[pi[0], pi[1], p0, t0])
+    ax.plot(time_hold, temp_hold, 'k-', alpha=0.2, lw=0.5,label='Uncertainty')
+
+    time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_no_change, pars=[pi[0], pi[1], p0, t0])
+    ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0])
+    ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0])
+    ax.plot(time_hold[64:], temp_hold[64:], 'b-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+    time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0])
+    ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='Uncertainty')
+
+v = 1
+ax.errorbar(tT_provided, T_provided, yerr=v, fmt='ro', label='data')
 plt.show()
