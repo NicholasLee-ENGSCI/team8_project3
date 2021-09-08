@@ -48,7 +48,7 @@ def interp(t0, t1, dt):
 
     # Calculation of water lvl from 1850 - 1875   **This is a bit messy for now but leave like this
     # Ratouis2017, figure 16, gives us historical water data
-    # Can be approximated to a circle function (x - 1.068182)²  +  (y - 104.7955)²  =  3.732914e+4
+    # Can be approximated to a circle function (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4
     # Calculated using http://www.1728.org/circle2.htm, parameters {0, 297.4; 30, 296.9; 69,295} respectively
     # math.sqrt(1.1631150e+6 - (i + 2.9704) ** 2) - 781.074     for 0.5 step
     #  (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4  for 1 step?
@@ -59,9 +59,8 @@ def interp(t0, t1, dt):
     # f, ax = plt.subplots(1)
     # ax.plot(t, water_interp, 'bo', marker='o')
 
-    # Conversion of water level to pressure  **this needs a revision kinda pulled this out my ass
-    # we need a reference point atm the -2909250 + 5000 is our reference but why???
-    pr = ((water_interp-297.4) * 997 * 9.81) + 5000
+    # Conversion of water level to pressure
+    pr = ((water_interp - 297.4) * 997 * 9.81) + 5000
 
     return t, pr
 
@@ -96,7 +95,13 @@ def interpolate_q_total(t):
     ex1 = np.interp(t, tq1, pr1)
     ex2 = np.interp(t, tq2, pr2)
 
-    return ex1-ex2
+    # calculation of reinjection rate
+    ex_final = ex1
+    ex_final[34:] = ex_final[34:] - 1500  # 1500 1985
+    ex_final[41:] = ex_final[41:] - 3800  # 5300 1992
+    ex_final[50:] = ex_final[50:] - 2200  # 7500 2001
+
+    return ex_final
 
 
 def ode_model(t, pr, q, dqdt, a, b, c, p0):
@@ -196,7 +201,7 @@ def solve_ode(f, t0, t1, dt, x0, indicator, pars):
     ys[0] = x0  # set initial value of solution array
 
     q = interpolate_q_total(ts)
-    q = q / 86.4 # 1 kg/s is equivalent to 86.4 tonnes/day
+    q = q / 86.4  # 1 kg/s is equivalent to 86.4 tonnes/day
 
     # total extraction is found by interpolating two extraction rates given and summing them (done using the
     # interpolate_q_total() function)
@@ -315,13 +320,13 @@ def fit(t, wp, dt, x0, p0):
     #                        ydata=wp, p0=[0.15, 0.12, 0.6],
     #                        bounds=((-np.inf, -np.inf, -np.inf), (np.inf, np.inf, np.inf)))
 
-    #estimation of anual rainfall taking from ratoius2017 then converted to pressure change
-    sigma = [0.9*997*9.81]*len(t)
+    # estimation of anual rainfall taking from ratoius2017 then converted to pressure change
+    sigma = [0.8 * 997 * 9.81] * len(t)
 
     para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
-                           ydata=wp, p0=[0.15, 0.12, 0.6],
-                           bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)),
-                           sigma=sigma)
+                             ydata=wp, p0=[0.15, 0.12, 0.6],
+                             bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)),
+                             sigma=sigma)
 
     print(para)  # for testing
     a = para[0]

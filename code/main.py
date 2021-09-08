@@ -271,8 +271,13 @@ quant_misfit()
 # ap = 1.41e-3
 # para_p[1] = 5.95e-2
 # para_p[2] = 8.5e-3
+#para_p[0] = 0.15
+#para_p[1] = 0.12
+#para_p[2] = 0.14
+
+
 g = 9.81
-A = 1.5e+7
+A = 150
 S0 = 0.3
 print("the estimated porosity through inverse modelling is:")
 print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
