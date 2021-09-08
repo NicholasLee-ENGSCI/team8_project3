@@ -336,62 +336,6 @@ def fit(t, wp, dt, x0, p0):
     return para, cov
 
 
-def production_scenarios(t0, t1, dt):
-    '''
-    This function plots all different production scenarios for comparison
-
-
-    '''
-    # plotting format
-    f, ax1 = plt.subplots(nrows=1, ncols=1)
-
-    # plotting no change
-    n = int(np.ceil((t1 - t0) / dt))  # number of steps
-    t = t0 + np.arange(n + 1) * dt  # time array
-
-    q0 = interpolate_q_total(t)
-    q0 = q0 / 86.4
-
-    # operation terminated
-    q1 = interpolate_q_total(t)
-    q1 = q1 / 86.4
-    a = q1[64] / 36
-    for i in range(65, 101):
-        q1[i] = q1[64] - a * (i - 65)
-
-    # double production
-    q2 = interpolate_q_total(t)
-    q2 = q2 / 86.4
-    for i in range(65, 101):
-        q2[i] = q2[64] + a * (i - 65)
-
-    # half production
-    q3 = interpolate_q_total(t)
-    q3 = q3 / 86.4
-    b = q3[64] / 72
-    for i in range(65, 101):
-        q3[i] = q3[64] - b * (i - 65)
-
-    ln1 = ax1.plot(t, q0, 'k-', label='maintained production')
-    ln2 = ax1.plot(t, q1, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t, q2, 'g-', label='production doubled')
-    ln4 = ax1.plot(t, q3, 'b-', label='production halved')
-
-    lns = ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=1)
-    ax1.set_ylabel('Production [tonnes/day???]')
-    ax1.set_xlabel('time [yr]')
-    ax1.set_title('different production scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('production_scenarios.png', dpi=300)
-    return
-
 
 def forecast(t0, t1, dt, x0, a, b, c, p0):
     ''' This function is to extrapolate to year 2050, then plot it
@@ -421,6 +365,8 @@ def forecast(t0, t1, dt, x0, a, b, c, p0):
 
         need to parse the parameters incase we change our model we want the plots to reflect our model
     '''
+
+    # pressure forecast
     # plotting format
     f, ax1 = plt.subplots(nrows=1, ncols=1)
 
@@ -430,15 +376,20 @@ def forecast(t0, t1, dt, x0, a, b, c, p0):
     y_double = solve_ode(ode_model, t0, t1, dt, x0, 'DOUBLE', pars=[a, b, c, p0])[1]
     y_half = solve_ode(ode_model, t0, t1, dt, x0, 'HALF', pars=[a, b, c, p0])[1]
 
+    y_no_change = y_no_change / 10 ** 5
+    y_stop = y_stop / 10 ** 5
+    y_double = y_double / 10 ** 5
+    y_half = y_half / 10 ** 5
+
     # plotting the different scenarios against each other
-    ln1 = ax1.plot(t, y_no_change / 10 ** 5, 'k-', label='maintained production')
-    ln2 = ax1.plot(t, y_stop / 10 ** 5, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t, y_double / 10 ** 5, 'g-', label='production doubled')
-    ln4 = ax1.plot(t, y_half / 10 ** 5, 'b-', label='production halved')
+    ln1 = ax1.plot(t, y_no_change, 'k-', label='maintained production')
+    ln2 = ax1.plot(t, y_stop, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t, y_double, 'g-', label='production doubled')
+    ln4 = ax1.plot(t, y_half, 'b-', label='production halved')
 
     lns = ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=2)
+    ax1.legend(lns, labs, loc=4)
     ax1.set_ylabel('Pressure [MPa]')
     ax1.set_xlabel('time [yr]')
     ax1.set_title('Pressure predictions for different scenarios from 2014')
@@ -449,4 +400,33 @@ def forecast(t0, t1, dt, x0, a, b, c, p0):
         plt.show()
     else:
         plt.savefig('pressure_forecast.png', dpi=300)
+
+    # rate of pressure change forecast
+    # plotting format
+    f, ax2 = plt.subplots(nrows=1, ncols=1)
+    t_pred = np.copy(t[64:])
+    dy_no_ch = np.gradient(np.copy(y_no_change[64:]))
+    dy_st = np.gradient(np.copy(y_stop[64:]))
+    dy_do = np.gradient(np.copy(y_double[64:]))
+    dy_ha = np.gradient(np.copy(y_half[64:]))
+
+    ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
+    ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintained production')
+    ln2 = ax2.plot(t_pred, dy_st, 'r-', label='operation terminated')
+    ln3 = ax2.plot(t_pred, dy_do, 'g-', label='production doubled')
+    ln4 = ax2.plot(t_pred, dy_ha, 'b-', label='production halved')
+
+    lns = ln0 + ln1 + ln2 + ln3 + ln4
+    labs = [l.get_label() for l in lns]
+    ax2.legend(lns, labs, loc=4)
+    ax2.set_ylabel('rate of pressure change')
+    ax2.set_xlabel('time [yr]')
+    ax2.set_title('rate of pressure change predictions for different scenarios from 2014')
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_forecast_supplement.png', dpi=300)
     return

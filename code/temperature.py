@@ -164,6 +164,7 @@ def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
     .
     .
     '''
+    # temperature forecast
     # plotting format
     f, ax1 = plt.subplots(nrows=1, ncols=1)
 
@@ -199,4 +200,33 @@ def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
         plt.show()
     else:
         plt.savefig('temperature_forecast.png', dpi=300)
+
+    # rate of temperature change forecast
+    # plotting format
+    f, ax2 = plt.subplots(nrows=1, ncols=1)
+    t_pred = np.copy(tx[64:])
+    dt_no_ch = np.gradient(np.copy(t_no_change[64:]))
+    dt_st = np.gradient(np.copy(t_no_prod[64:]))
+    dt_do = np.gradient(np.copy(t_double_prod[64:]))
+    dt_ha = np.gradient(np.copy(t_half_prod[64:]))
+
+    ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
+    ln1 = ax2.plot(t_pred, dt_no_ch, 'k-', label='maintained production')
+    ln2 = ax2.plot(t_pred, dt_st, 'r-', label='operation terminated')
+    ln3 = ax2.plot(t_pred, dt_do, 'g-', label='production doubled')
+    ln4 = ax2.plot(t_pred, dt_ha, 'b-', label='production halved')
+
+    lns = ln0 + ln1 + ln2 + ln3 + ln4
+    labs = [l.get_label() for l in lns]
+    ax2.legend(lns, labs, loc=3)
+    ax2.set_ylabel('rate of temperature change')
+    ax2.set_xlabel('time [yr]')
+    ax2.set_title('rate of temperature change predictions for different scenarios from 2014')
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('temperature_forecast_supplement.png', dpi=300)
     return
