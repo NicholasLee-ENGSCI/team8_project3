@@ -13,6 +13,10 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **given_data_3.png** : plot of given data (temperature and total production rate, q1 with _reinjection_ considered).
 
+### Assume 
+
+- **approximate_area.png** : the reservoir area estimation. 
+
 ### Suitable
 
 - **bestfit.png** : plot of best fit pressure and temperature LPM ODE models.
@@ -40,3 +44,4 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 - **temperature_forecast_uncertainty.png** : plot of temperature forecast with uncertainty.
 
 - **temperature_forecast_uncertainty_supplement.png** : plot of rate of change of temperature forecast with uncertainty.
+
