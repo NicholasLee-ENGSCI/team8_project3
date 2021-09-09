@@ -514,7 +514,7 @@ def convergence_analysis(t, x0, ap, bp, cp):
 
     # plot 1/h against the population after 100 years for each step size value
     ax.plot(t_values, p_values, 'rx')
-    ax.set_title('Convergence Analysis of Waikite Geyser Recovery Model')
+    ax.set_title('Convergence Analysis')
     ax.set_xlabel('1/time step')
     ax.set_ylabel('Difference in final pressure value')
     plt.show()
