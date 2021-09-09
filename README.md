@@ -30,3 +30,13 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 - **temperature_forecast.png** : plot of temperature forecast for different production rate scenarios (temperature is not directly dependent on production rates, but it is dependent on pressure values that is dependent on production rates).
 
 - **temperature_forecast_supplement.png** : plot of rate of temperature change forecast for different production rate scenarios. The dashed line shows the rate of temperature change in which the Rotorua geothermal system is not recovering (rate of temperature change must be greater than 0 at all times to show recovery).
+
+### Unknown
+
+- **pressure_forecast_uncertainty.png** : plot of pressure forecast with uncertainty.
+
+- **pressure_forecast_uncertainty_supplement.png** : plot of rate of change of pressure forcast with uncertainty.
+
+- **temperature_forecast_uncertainty.png** : plot of temperature forecast with uncertainty.
+
+- **temperature_forecast_uncertainty_supplement.png** : plot of rate of change of temperature forecast with uncertainty.
