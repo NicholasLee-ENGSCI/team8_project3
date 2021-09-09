@@ -4,15 +4,16 @@ import temperature as t
 from matplotlib import pyplot as plt
 import numpy as np
 
+
 # plotting the given data
 
 # boolean variable to run the dual plot 
-run_plot1 = True # plotting the water level and total production rate (with reinjection rate considered).
-run_plot2 = True # conversion from water level to pressure.
-run_plot3 = True # plotting the temperature and total production rate (with reinjection rate considered).
-bestfit = True # plot pressure and temperature bestfit LPM ODE models.
-forecast = True # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. 
-misfit = True # plot quantified misfit of the model to data.
+run_plot1 = False # plotting the water level and total production rate (with reinjection rate considered).
+run_plot2 = False # conversion from water level to pressure.
+run_plot3 = False # plotting the temperature and total production rate (with reinjection rate considered).
+bestfit = True # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS. 
+forecast = True # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
+misfit = False # plot quantified misfit of the model to data.
 uncertainty = True # plot of pressure and temperature forecast uncertainty.
 
 # the influence of borehole closure program on the water level recovery
@@ -291,32 +292,37 @@ print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
 
 #Uncertainty
 if uncertainty:
+
+    # plotting pressure forecast with uncertainty
     f, ax = plt.subplots(nrows=1, ncols=1)
 
     ps = np.random.multivariate_normal(para_p, cov_p, 100)
     for pi in ps:
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ln1 = ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='Uncertainty')
+        ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='best fit model')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'b-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'b-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     v = 0.03
     p_provided = (p_provided * 997 * 9.81) - 2909250 + 5000
     ax.errorbar(tp_provided, p_provided/100000, yerr=v, fmt='ro', label='data')
 
-    lns = ln1
-    labs = [l.get_label() for l in lns]
-    ax.legend(lns,labs,loc=3)
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
+    ax.legend(*zip(*unique))
+    ax.set_ylabel('pressure [bar]')
+    ax.set_xlabel('time [yr]')
+    ax.set_title('pressure forecast with uncertainty')
 
     save_figure = False
     if not save_figure:
@@ -325,30 +331,103 @@ if uncertainty:
         plt.savefig('pressure_forecast_uncertainty.png',dpi=300)
 
 
+    # rate of pressure change forecast with uncertainty
+    f, ax = plt.subplots(nrows=1, ncols=1)
+
+    ps = np.random.multivariate_normal(para_p, cov_p, 100)
+    for pi in ps:
+        time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='maintained production')
+
+        time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'b-', alpha=0.2, lw=0.5, label='operation terminated')
+
+        time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='production doubled')
+
+        time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'y-', alpha=0.2, lw=0.5, label='production halved')
+
+    ax.plot(time_temp[64:], np.zeros(len(time_temp[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
+
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
+    ax.legend(*zip(*unique))
+    ax.set_ylabel('rate of pressure change')
+    ax.set_xlabel('time [yr]')
+    ax.set_title('rate of pressure change forecast with uncertainty')
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_forecast_uncertainty_supplement.png',dpi=300)
+
+
+    # temperature forecast with uncertainty
     f, ax = plt.subplots(nrows=1, ncols=1)
 
     ps = np.random.multivariate_normal(para_t, cov_t, 100)
     for pi in ps:
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, y_no_change, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold, temp_hold, 'k-', alpha=0.2, lw=0.5,label='Uncertainty')
+        ax.plot(time_hold, temp_hold, 'k-', alpha=0.2, lw=0.5,label='best fit model')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_no_change, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'b-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_hold[64:], temp_hold[64:], 'b-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='Uncertainty')
+        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='production halved')
 
     v = 1
     ax.errorbar(tT_provided, T_provided, yerr=v, fmt='ro', label='data')
     
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
+    ax.legend(*zip(*unique))
+    ax.set_ylabel('temperature [degC]')
+    ax.set_xlabel('time [yr]')
+    ax.set_title('temperature forecast with uncertainty')
+
     save_figure = False
     if not save_figure:
         plt.show()
     else:
         plt.savefig('temperature_forecast_uncertainty.png',dpi=300)
+
+    # rate of temperature change forecast with uncertainty
+    f, ax = plt.subplots(nrows=1, ncols=1)
+
+    ps = np.random.multivariate_normal(para_t, cov_t, 100)
+    for pi in ps:
+        time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_no_change, pars=[pi[0], pi[1], p0, t0])
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'y-', alpha=0.2, lw=0.5, label='maintained production')
+
+        time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0])
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'r-', alpha=0.2, lw=0.5, label='operation terminated')
+
+        time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0])
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'b-', alpha=0.2, lw=0.5, label='production doubled')
+
+        time_hold, temp_hold = t.solve_ode(t.ode_model, time0, 2050, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0])
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'g-', alpha=0.2, lw=0.5, label='production halved')
+
+    ax.plot(time_temp[64:], np.zeros(len(time_temp[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
+
+    handles, labels = ax.get_legend_handles_labels()
+    unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
+    ax.legend(*zip(*unique))
+    ax.set_ylabel('rate of temperature change')
+    ax.set_xlabel('time [yr]')
+    ax.set_title('rate of temperature change forecast with uncertainty')
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('temperature_forecast_uncertainty_supplement.png',dpi=300)
