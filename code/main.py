@@ -12,9 +12,9 @@ run_plot1 = False # plotting the water level and total production rate (with rei
 run_plot2 = False # conversion from water level to pressure.
 run_plot3 = False # plotting the temperature and total production rate (with reinjection rate considered).
 bestfit = True # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS. 
-forecast = True # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
+forecast = False # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
 misfit = False # plot quantified misfit of the model to data.
-uncertainty = True # plot of pressure and temperature forecast uncertainty.
+uncertainty = False # plot of pressure and temperature forecast uncertainty.
 
 # the influence of borehole closure program on the water level recovery
 if run_plot1:
@@ -284,7 +284,7 @@ if misfit:
 
 
 g = 9.81
-A = 150
+A = 15
 S0 = 0.3
 print("the estimated porosity through inverse modelling is:")
 print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
