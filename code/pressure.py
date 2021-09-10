@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from scipy import optimize as op
 
 
-def interp(t0, t1, dt):
+def interp(t0, t1, dt, flag):
     """ Return the interpolated values of pressure for a given range of time.
 
             Parameters:
@@ -52,7 +52,7 @@ def interp(t0, t1, dt):
     # Calculated using http://www.1728.org/circle2.htm, parameters {0, 297.4; 30, 296.9; 69,295} respectively
     # math.sqrt(1.1631150e+6 - (i + 2.9704) ** 2) - 781.074     for 0.5 step
     #  (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4  for 1 step?
-    if (dt == 1):
+    if dt == 1 and flag:
         for i in range(0, 34):
             water_interp[i] = math.sqrt(8.1733e+4 - (i + 2.0211) ** 2) + 11.518
 
@@ -60,7 +60,7 @@ def interp(t0, t1, dt):
     # ax.plot(t, water_interp, 'bo', marker='o')
 
     # Conversion of water level to pressure
-    pr = ((water_interp - 297.4) * 997 * 9.81) + 5000
+    pr = (((water_interp - 296.9) * 997 * 9.81))/100000
 
     return t, pr
 
@@ -316,16 +316,13 @@ def fit(t, wp, dt, x0, p0):
             no idea about covariance atm
 
     """
-    # para, _ = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
-    #                        ydata=wp, p0=[0.15, 0.12, 0.6],
-    #                        bounds=((-np.inf, -np.inf, -np.inf), (np.inf, np.inf, np.inf)))
-
     # estimation of anual rainfall taking from ratoius2017 then converted to pressure change
-    sigma = [0.8 * 997 * 9.81] * len(t)
+    sigma = ([0.8 * 997 * 9.81/100000]) * len(t)
 
     para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
-                             ydata=wp, p0=[0.15, 0.12, 0.6],
-                             bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)),
+                             ydata=wp,
+                             p0=[0, 0, 0],
+                             bounds=((0,0, -np.inf), (0.001, np.inf, np.inf)),
                              sigma=sigma)
 
     print(para)  # for testing

@@ -11,9 +11,9 @@ import numpy as np
 run_plot1 = False # plotting the water level and total production rate (with reinjection rate considered).
 run_plot2 = False # conversion from water level to pressure.
 run_plot3 = False # plotting the temperature and total production rate (with reinjection rate considered).
-bestfit = True # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS. 
+bestfit = True # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
 forecast = False # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
-misfit = False # plot quantified misfit of the model to data.
+misfit = True # plot quantified misfit of the model to data.
 uncertainty = False # plot of pressure and temperature forecast uncertainty.
 
 # the influence of borehole closure program on the water level recovery
@@ -69,16 +69,14 @@ if run_plot2:
 
     # PRESSURE
     dt_p = 1                                        # step size
-    x0_p = 5000                                     # starting pressure value, PA
-    p0 = 0                                          # hydrostatic pressure at recharge source
 
     # converting water level to pressure and plotting, the plot is gonna look weird because I changed it for a
     # better fit will fix this graph later this is not that important right now
-    t_p, pressure_data = p.interp(time0, time1, dt_p)  
+    t_p, pressure_data = p.interp(time0, time1, dt_p, True)
 
     tp_provided, p_provided = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # given pressure data  
     p_plot = np.interp(tp_provided, t_p, pressure_data) # the pressure calculated from water level is interpolated to match the time we are provided
-    ln3 = ax2.plot(tp_provided, p_plot/100000, 'bo', marker='o',markersize = 7, label='pressure data')  # pressure data is converted from Pa to bar (1 Pa = 1.e-5 bar)
+    ln3 = ax2.plot(tp_provided, p_plot, 'bo', marker='o',markersize = 7, label='pressure data')  # pressure data is converted from Pa to bar (1 Pa = 1.e-5 bar)
 
     # lns = ln1+ln2+ln3 # if we want to plot rhyolite data as well
     lns = ln1+ln3
@@ -144,29 +142,29 @@ if bestfit:
 
     # PRESSURE
     dt_p = 1                                        # step size
-    x0_p = 5000                                     # starting pressure value, PA
-    p0 = 5000                                       # hydrostatic pressure at recharge source assuming shallow inflow scott2016 pg297
+    x0_p = 0.05                                      # starting pressure value, PA
+    p0 = -0.03                                     # hydrostatic pressure at recharge source assuming shallow inflow scott2016 pg297
 
     # converting water level to pressure and plotting, the plot is gonna look weird because I changed it for a
     # better fit will fix this graph later this is not that important right now
-    t_p, pressure_data = p.interp(time0, time1, dt_p)  
+    t_p, pressure_data = p.interp(time0, time1, dt_p, True)
 
     tp_provided, p_provided = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # given pressure data
     p_plot = np.interp(tp_provided, t_p, pressure_data) # the pressure calculated from water level is interpolated to match the time we are provided
-    ln1 = ax1.plot(tp_provided, p_plot/100000, 'bo', marker='o', label='pressure data')  # pressure data is converted from Pa to bar (1 Pa = 1.e-5 bar)
+    ln1 = ax1.plot(tp_provided, p_plot, 'bo', marker='o', label='pressure data')  # pressure data is converted from Pa to bar (1 Pa = 1.e-5 bar)
 
     # estimating parameters still a basic implementation read note in fit for details
     para_p, cov_p = p.fit(t_p, pressure_data, dt_p, x0_p, p0)
 
     # numerical solution and plotting
     time_fit, pressure_fit = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[para_p[0], para_p[1], para_p[2], p0])
-    ln2 = ax1.plot(time_fit, pressure_fit/100000, 'b-', label='pressure best fit')  # pressure_fit data is converted from Pa to bar (1 Pa = 1.e-5 bar) 
+    ln2 = ax1.plot(time_fit, pressure_fit, 'b-', label='pressure best fit')  # pressure_fit data is converted from Pa to bar (1 Pa = 1.e-5 bar)
 
 
     # TEMPERATURE
     dt_t = 1                                    # step size
     x0_t = 149                                  # starting temperature
-    t0 = 147                                    # temperature outside CV/ conduction source
+    t0 = 145.9                                    # temperature outside CV/ conduction source
 
     # interpolating temp will also look weird will fix later
     t_t, temp_data = t.interp(time0, time1, dt_t)
@@ -217,9 +215,9 @@ def quant_misfit():
     '''
     # quantifying misfit for pressure LPM ODE
     fig, axes = plt.subplots(1,2)
-    ln1 = axes[0].plot(tp_provided, p_plot/100000, 'bo', marker='o', label='data')
+    ln1 = axes[0].plot(tp_provided, p_plot, 'bo', marker='o', label='data')
     px_plot = np.interp(tp_provided, time_fit, pressure_fit)
-    ln2 = axes[0].plot(tp_provided, px_plot/100000, 'k-', label='ap = 9.110\nbp = 1.116e-1\ncp = 6.571e+1')
+    ln2 = axes[0].plot(tp_provided, px_plot, 'k-', label='ap = 9.110\nbp = 1.116e-1\ncp = 6.571e+1')
 
     lns = ln1+ln2
     labs = [l.get_label() for l in lns]
@@ -230,7 +228,7 @@ def quant_misfit():
 
     p_misfit = px_plot - p_plot
     axes[1].plot(tp_provided, np.zeros(len(tp_provided)), 'k--')
-    axes[1].plot(tp_provided, p_misfit/100000, 'rx')
+    axes[1].plot(tp_provided, p_misfit, 'rx')
 
     axes[1].set_ylabel('pressure misfit [bar]')
     axes[1].set_xlabel('time [yr]')
@@ -278,13 +276,13 @@ if misfit:
 # ap = 1.41e-3
 # para_p[1] = 5.95e-2
 # para_p[2] = 8.5e-3
-#para_p[0] = 0.15
-#para_p[1] = 0.12
-#para_p[2] = 0.14
+#para_p[0] = para_p[0]/1000
+#para_p[1] = para_p[1]*3.154e+7
+#para_p[2] = para_p[2]*3.154e+2
 
 
 g = 9.81
-A = 15
+A = 15e+6
 S0 = 0.3
 print("the estimated porosity through inverse modelling is:")
 print((g*(para_p[0]-para_p[1]*para_p[2]))/((para_p[0]**2)*A*(1-S0)))
@@ -299,23 +297,23 @@ if uncertainty:
     ps = np.random.multivariate_normal(para_p, cov_p, 100)
     for pi in ps:
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, time1, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp, pressure_temp/100000, 'k-', alpha=0.2, lw=0.5,label='best fit model')
+        ax.plot(time_temp, pressure_temp, 'k-', alpha=0.2, lw=0.5,label='best fit model')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(time_temp[64:], pressure_temp[64:], 'r-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'b-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_temp[64:], pressure_temp[64:], 'b-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_temp[64:], pressure_temp[64:], 'g-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], pressure_temp[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_temp[64:], pressure_temp[64:], 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     v = 0.03
-    p_provided = (p_provided * 997 * 9.81) - 2909250 + 5000
-    ax.errorbar(tp_provided, p_provided/100000, yerr=v, fmt='ro', label='data')
+    p_provided = (((p_provided-297.4) * 997 * 9.81) + 5000)/100000
+    ax.errorbar(tp_provided, p_provided, yerr=v, fmt='ro', label='data')
 
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
@@ -337,16 +335,16 @@ if uncertainty:
     ps = np.random.multivariate_normal(para_p, cov_p, 100)
     for pi in ps:
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:]), 'r-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'b-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:]), 'b-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:]), 'g-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_temp, pressure_temp = p.solve_ode(p.ode_model, time0, 2050, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:] / 100000), 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_temp[64:], np.gradient(pressure_temp[64:]), 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     ax.plot(time_temp[64:], np.zeros(len(time_temp[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
