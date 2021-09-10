@@ -12,6 +12,9 @@ def interp(t0, t1, dt):
     time, temp = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # temperature (gr_t data)
     temp_interp = np.interp(t, time, temp)
 
+    #f, ax = plt.subplots(1)
+    #ax.plot(t, temp_interp, 'bo', marker='o')
+
     return t, temp_interp
 
 
@@ -133,11 +136,9 @@ def helper(t, dt, x0, pr, a, b, p0, temp0):
 def fit(t, temp, dt, x0, pr, p0, temp0):
     sigma = [2]*len(t)
 
-    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp,
-                             p0=(0.000005, 0.08),
-                             sigma=sigma)
+    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp, p0=(0.000001, 0.08), sigma=sigma)
 
-    return para , cov
+    return para, cov
 
 def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
     '''
