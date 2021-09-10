@@ -1,9 +1,9 @@
 # team8_project3
 ENGSCI 263 CM project; team 8, project 3
 
-Following list of files can be found in the ***code*** folder. All diagrams will be produced when the ***main.py*** script is ran. Every other folders are irrelevant for the assessment of our project. 
+Following list of files can be found in the ***code*** folder. All diagrams will be produced when the ***main.py*** script is ran. Every other folders are irrelevant for the assessment of our project. ***pressure.py*** and ***temperature.py*** python scripts are called within ***main.py*** python script and are used for calculations. ***tests.py*** is used for unit testing. 
 
-## The list of diagrams and python scripts with their purpose:
+## The list of diagrams and their description:
 
 ### Given
 
