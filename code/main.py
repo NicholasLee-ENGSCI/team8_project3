@@ -3,6 +3,7 @@ import pressure as p
 import temperature as t
 from matplotlib import pyplot as plt
 import numpy as np
+import tests as tests
 
 
 # plotting the given data
@@ -13,7 +14,8 @@ run_plot2 = False # conversion from water level to pressure.
 run_plot3 = False # plotting the temperature and total production rate (with reinjection rate considered).
 bestfit = True # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
 forecast = False # plot pressure and temperature forecast to 2050, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
-misfit = True # plot quantified misfit of the model to data.
+misfit = False # plot quantified misfit of the model to data.
+method_validation = True # plot benchmarking and convergence test.
 uncertainty = False # plot of pressure and temperature forecast uncertainty.
 
 # the influence of borehole closure program on the water level recovery
@@ -208,6 +210,39 @@ if forecast:
     y_double = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'DOUBLE', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
     y_half = p.solve_ode(p.ode_model, time0,2050,dt_p,x0_p, 'HALF', pars=[para_p[0],para_p[1],para_p[2], p0])[1]
     t.forecast(time0, 2050, dt_t, x0_t, tp_pred, y_no_change, y_stop, y_double, y_half, para_t[0], para_t[1], p0, t0)
+    
+if method_validation:
+    # benchmarking 
+
+    t = np.linspace(0, 2.7, 51)
+    y_num, y_analytic = tests.benchmarking(t, (t[-1]-t[0])/(len(t)-1), x0_p, 'SAME', para_p[0], para_p[1], para_p[2], p0)
+
+    fig, axes = plt.subplots(1,2)
+    ln1 = axes[0].plot(t, y_num, 'kx', label='numerical solution')
+    ln2 = axes[0].plot(t, y_analytic, 'b-', label='analytical solution')
+
+    lns = ln1+ln2
+    labs = [l.get_label() for l in lns]
+    axes[0].legend(lns,labs,loc=4)
+    axes[0].set_ylabel('x')
+    axes[0].set_xlabel('t')
+    axes[0].set_title('benchmarking')
+
+    # convergence test
+
+    # axes[1].plot(t, np.zeros(len(tp_provided)), 'k--')
+    # axes[1].plot(t, , 'rx')
+
+    axes[1].set_ylabel('pressure misfit [bar]')
+    axes[1].set_xlabel('time [yr]')
+    axes[1].set_title('best fit pressure LPM ODE model')
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_misfit.png',dpi=300)
+
 
 def quant_misfit():
     '''
