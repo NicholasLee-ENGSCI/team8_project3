@@ -17,9 +17,21 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **approximate_area.png** : the reservoir area estimation. 
 
+### Working
+
+- **pressure_validation.png** : plot of pressure benchmarking and pressure convergence analysis.
+
 ### Suitable
 
-- **bestfit.png** : plot of best fit pressure and temperature LPM ODE models.
+- **initial_best_fit.png** : plot of initial pressure best fit model (cp = 0, which disregards slow drainage).
+
+- **initial_pressure_misfit.png** : plot of initial pressure best fit model and misfit to data quantified.
+
+- **initial_temperature_misfit.png** : plot of initial temperature best fit model and misfit to data quantified.
+
+### Improve
+
+- **best_fit.png** : plot of best fit pressure and temperature LPM ODE models.
 
 - **pressure_misfit.png** : plot of best fit pressure LPM ODE model and misfit to data quantified. 
 
