@@ -17,10 +17,7 @@ bestfit = True  # plot pressure and temperature bestfit LPM ODE models. MUST REM
 forecast = True
 misfit = True  # plot quantified misfit of the model to data.
 inversion = True
-
-
-
-uncertainty = False  # plot of pressure and temperature forecast uncertainty.
+uncertainty = True  # plot of pressure and temperature forecast uncertainty.
 
 tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
 tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # production rate 2 (gr_q2 data)
@@ -195,7 +192,7 @@ if misfit:
     fig, axes = plt.subplots(1, 2)
     ln1 = axes[0].plot(twl, p_plot, 'bo', marker='o', label='data')
     px_plot = np.interp(twl, time_fit, pressure_fit)
-    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = 9.110\nbp = 1.116e-1\ncp = 6.571e+1')
+    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = 7.751e+1\nbp = 1\ncp = 0')
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -227,7 +224,7 @@ if misfit:
 
     ln1 = axes[0].plot(t_given, temp_given, 'bo', marker='o', label='data')
     Tx_plot = np.interp(t_given, timeT_fit, temp_fit)
-    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = 6.058e-7\nbt = 8.288e-2')
+    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = 6.366e-7\nbt = 8.527e-2')
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -451,15 +448,17 @@ if forecast:
     y_half = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'HALF', pars=[para_p[0], para_p[1], para_p[2], p0])[1]
 
     # plotting the different scenarios against each other
-    ln1 = ax1.plot(t_forc, y_same, 'k-', label='maintained production')
-    ln2 = ax1.plot(t_forc, y_stop, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t_forc, y_double, 'g-', label='production doubled')
-    ln4 = ax1.plot(t_forc, y_half, 'b-', label='production halved')
+    ln5 = ax1.plot(twl, p_plot / 100000, 'ro', marker='o', label='data')
+    ln0 = ax1.plot(t_forc[:65], y_same[:65] / 100000, 'k-', label='best fit model')
+    ln1 = ax1.plot(t_forc[64:], y_same[64:] / 100000, 'y-', label='maintained production')
+    ln2 = ax1.plot(t_forc[64:], y_stop[64:] / 100000, 'r-', label='operation terminated')
+    ln3 = ax1.plot(t_forc[64:], y_double[64:] / 100000, 'g-', label='production doubled')
+    ln4 = ax1.plot(t_forc[64:], y_half[64:] / 100000, 'b-', label='production halved')
 
-    lns = ln1 + ln2 + ln3 + ln4
+    lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc=4)
-    ax1.set_ylabel('Pressure [MPa]')
+    ax1.set_ylabel('Pressure [bar]')
     ax1.set_xlabel('time [yr]')
     ax1.set_title('Pressure predictions for different scenarios from 2014')
 
@@ -474,10 +473,10 @@ if forecast:
     # plotting format
     fig, ax2 = plt.subplots(nrows=1, ncols=1)
     t_pred = np.copy(t_forc[64:])
-    dy_no_ch = np.gradient(np.copy(y_same[64:]))
-    dy_st = np.gradient(np.copy(y_stop[64:]))
-    dy_do = np.gradient(np.copy(y_double[64:]))
-    dy_ha = np.gradient(np.copy(y_half[64:]))
+    dy_no_ch = np.gradient(np.copy(y_same[64:]/100000))
+    dy_st = np.gradient(np.copy(y_stop[64:]/100000))
+    dy_do = np.gradient(np.copy(y_double[64:]/100000))
+    dy_ha = np.gradient(np.copy(y_half[64:]/100000))
 
     ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
     ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintained production')
@@ -510,12 +509,14 @@ if forecast:
     t_half_prod = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_half, pars=[para_t[0], para_t[1], p0, t0])[1]
 
     # plotting the different scenarios against each other
-    ln1 = ax1.plot(tx, t_no_change, 'k--o', label='maintained production')
-    ln2 = ax1.plot(tx, t_no_prod, 'r*', label='operation terminated')
-    ln3 = ax1.plot(tx, t_double_prod, 'g.', label='production doubled')
-    ln4 = ax1.plot(tx, t_half_prod, 'b-', label='production halved')
+    ln5 = ax1.plot(t_given, temp_given, 'ro', marker='o', label='data')
+    ln0 = ax1.plot(tx[:65], t_no_change[:65], 'k-', label='best fit model')
+    ln1 = ax1.plot(tx[64:], t_no_change[64:], 'y-', label='maintained production')
+    ln2 = ax1.plot(tx[64:], t_no_prod[64:], 'r-', label='operation terminated')
+    ln3 = ax1.plot(tx[64:], t_double_prod[64:], 'g-', label='production doubled')
+    ln4 = ax1.plot(tx[64:], t_half_prod[64:], 'b-', label='production halved')
 
-    lns = ln1 + ln2 + ln3 + ln4
+    lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
     ax1.legend(lns, labs, loc=3)
     ax1.set_ylabel('temperature [degC]')
