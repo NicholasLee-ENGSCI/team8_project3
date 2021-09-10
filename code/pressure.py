@@ -89,14 +89,17 @@ def interpolate_q_total(t):
     # read extraction rate data
     tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
     tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # production rate 2 (gr_q2 data)
+    tqr, prr = np.genfromtxt('gr_rainfall.txt', delimiter=',', skip_header=1).T  # rainfall data (gr_rainfall data)
+    prr = (prr/365)*0.001*997*0.001 # conversion from mm/yr rainfall to tonnes/day rainfall (mm rainfall indicates mm water for every 1m^2 area, 1 mm is 0.001 m, 1 year = 365 days, density of water is 997kg/m^3, 1 kg is 0.001 tonne)
 
     # we need to decide how we calculate q and what falls in our zone, I remember something in the first few lectures
     # about this, 2D blocking maybe??
     ex1 = np.interp(t, tq1, pr1)
     ex2 = np.interp(t, tq2, pr2)
+    ex3 = np.interp(t, tqr, prr)
 
     # calculation of reinjection rate
-    ex_final = ex1
+    ex_final = ex1 - ex3
     ex_final[34:] = ex_final[34:] - 1500  # 1500 1985
     ex_final[41:] = ex_final[41:] - 3800  # 5300 1992
     ex_final[50:] = ex_final[50:] - 2200  # 7500 2001
