@@ -56,11 +56,11 @@ def interp(t0, t1, dt, flag):
         for i in range(0, 34):
             water_interp[i] = math.sqrt(8.1733e+4 - (i + 2.0211) ** 2) + 11.518
 
-    # f, ax = plt.subplots(1)
-    # ax.plot(t, water_interp, 'bo', marker='o')
+    #f, ax = plt.subplots(1)
+    #ax.plot(t, water_interp, 'bo', marker='o')
 
     # Conversion of water level to pressure
-    pr = (((water_interp - 296.9) * 997 * 9.81))/100000
+    pr = (((water_interp-296.9) * 997 * 9.81) )/100000
 
     return t, pr
 
@@ -331,12 +331,12 @@ def fit(t, wp, dt, x0, p0):
 
     """
     # estimation of annual rainfall taking from ratoius2017 then converted to pressure change
-    sigma = ([0.8 * 997 * 9.81/100000]) * len(t)
-
+    sigma = ([0.5 * 997 * 9.81/100000]) * len(t)
+    sigma[0:64]*4
     para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
                              ydata=wp,
                              p0=[0, 0, 0],
-                             bounds=((0,0, -np.inf), (np.inf, np.inf, np.inf)),
+                             bounds=((0,0, -np.inf), (0.001, np.inf, np.inf)),
                              sigma=sigma)
 
     return para, cov
