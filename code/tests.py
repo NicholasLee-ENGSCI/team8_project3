@@ -8,12 +8,16 @@ import math as math
 def find_analytic_pressure(t, ap, bp, cp, p0):
     '''
     compares analytic solution with model
+
+    for the analytical solution there are assumptions we make:
+    - rate of change of q will be constant
+    - slow drainage term c is ignored
     '''
     pAnalytic = np.zeros(len(t))
     q = p.interpolate_q_total(t)
     dqdt = np.gradient(q)
     for i in range(len(t)):
-        pAnalytic[i] = -(cp*dqdt[i]-ap*q[i])*(1/bp)*(1-math.exp(-bp*t[i])) + p0
+        pAnalytic[i] = p0 - (ap*q[i])*(1/bp)*(1-math.exp(-bp*t[i]))
     return pAnalytic
 
 

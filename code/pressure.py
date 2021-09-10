@@ -101,7 +101,22 @@ def interpolate_q_total(t):
     ex_final[41:] = ex_final[41:] - 3800  # 5300 1992
     ex_final[50:] = ex_final[50:] - 2200  # 7500 2001
 
-    return ex_final
+    return ex_final/86.4                    # conversion to kg/s from tons/yr
+
+def analytical(t, q, a, b, c, p0):
+    """
+
+    Args:
+        t:
+        ap:
+        bp:
+        cp:
+        p0:
+
+    Returns:
+
+    """
+    return p0 - (a * q)/b * (1 - math.exp(-b * t))
 
 
 def ode_model(t, pr, q, dqdt, a, b, c, p0):
@@ -201,7 +216,6 @@ def solve_ode(f, t0, t1, dt, x0, indicator, pars):
     ys[0] = x0  # set initial value of solution array
 
     q = interpolate_q_total(ts)
-    q = q / 86.4  # 1 kg/s is equivalent to 86.4 tonnes/day
 
     # total extraction is found by interpolating two extraction rates given and summing them (done using the
     # interpolate_q_total() function)
@@ -316,114 +330,13 @@ def fit(t, wp, dt, x0, p0):
             no idea about covariance atm
 
     """
-    # estimation of anual rainfall taking from ratoius2017 then converted to pressure change
+    # estimation of annual rainfall taking from ratoius2017 then converted to pressure change
     sigma = ([0.8 * 997 * 9.81/100000]) * len(t)
 
     para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
                              ydata=wp,
                              p0=[0, 0, 0],
-                             bounds=((0,0, -np.inf), (0.001, np.inf, np.inf)),
+                             bounds=((0,0, -np.inf), (np.inf, np.inf, np.inf)),
                              sigma=sigma)
 
-    print(para)  # for testing
-    a = para[0]
-    b = para[1]
-    c = para[2]
-
     return para, cov
-
-
-
-def forecast(t0, t1, dt, x0, a, b, c, p0):
-    ''' This function is to extrapolate to year 2050, then plot it
-
-        Parameters:
-        -----------
-        t0 : float
-            Time at start.
-        t1 : float
-            Time at end.
-        dt : float
-            Time step length.
-        x0 : float
-            Initial pressure value.
-        a : float
-            extraction strength parameter.
-        b : float
-            recharge strength parameter.
-        c : float
-            slow drainage strength parameter.
-        p0 : float
-            hydrostatic pressure value of the source of reacharge.
-
-        Notes:
-        --------
-        plots some things
-
-        need to parse the parameters incase we change our model we want the plots to reflect our model
-    '''
-
-    # pressure forecast
-    # plotting format
-    f, ax1 = plt.subplots(nrows=1, ncols=1)
-
-    # calculating the different scenarios
-    t, y_no_change = solve_ode(ode_model, t0, t1, dt, x0, 'SAME', pars=[a, b, c, p0])
-    y_stop = solve_ode(ode_model, t0, t1, dt, x0, 'STOP', pars=[a, b, c, p0])[1]
-    y_double = solve_ode(ode_model, t0, t1, dt, x0, 'DOUBLE', pars=[a, b, c, p0])[1]
-    y_half = solve_ode(ode_model, t0, t1, dt, x0, 'HALF', pars=[a, b, c, p0])[1]
-
-    y_no_change = y_no_change / 10 ** 5
-    y_stop = y_stop / 10 ** 5
-    y_double = y_double / 10 ** 5
-    y_half = y_half / 10 ** 5
-
-    # plotting the different scenarios against each other
-    ln1 = ax1.plot(t, y_no_change, 'k-', label='maintained production')
-    ln2 = ax1.plot(t, y_stop, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t, y_double, 'g-', label='production doubled')
-    ln4 = ax1.plot(t, y_half, 'b-', label='production halved')
-
-    lns = ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=4)
-    ax1.set_ylabel('Pressure [MPa]')
-    ax1.set_xlabel('time [yr]')
-    ax1.set_title('Pressure predictions for different scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('pressure_forecast.png', dpi=300)
-
-    # rate of pressure change forecast
-    # plotting format
-    f, ax2 = plt.subplots(nrows=1, ncols=1)
-    t_pred = np.copy(t[64:])
-    dy_no_ch = np.gradient(np.copy(y_no_change[64:]))
-    dy_st = np.gradient(np.copy(y_stop[64:]))
-    dy_do = np.gradient(np.copy(y_double[64:]))
-    dy_ha = np.gradient(np.copy(y_half[64:]))
-
-    ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
-    ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintained production')
-    ln2 = ax2.plot(t_pred, dy_st, 'r-', label='operation terminated')
-    ln3 = ax2.plot(t_pred, dy_do, 'g-', label='production doubled')
-    ln4 = ax2.plot(t_pred, dy_ha, 'b-', label='production halved')
-
-    lns = ln0 + ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc=4)
-    ax2.set_ylabel('rate of pressure change')
-    ax2.set_xlabel('time [yr]')
-    ax2.set_title('rate of pressure change predictions for different scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('pressure_forecast_supplement.png', dpi=300)
-    return
