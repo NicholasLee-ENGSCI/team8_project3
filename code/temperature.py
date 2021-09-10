@@ -12,7 +12,14 @@ def interp(t0, t1, dt):
     time, temp = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # temperature (gr_t data)
     temp_interp = np.interp(t, time, temp)
 
+    #f, ax = plt.subplots(1)
+    #ax.plot(t, temp_interp, 'bo', marker='o')
+
     return t, temp_interp
+
+def analytical():
+    temp = 0
+
 
 
 def ode_model(t, temp, pr, a, b, p0, t0):
@@ -133,95 +140,6 @@ def helper(t, dt, x0, pr, a, b, p0, temp0):
 def fit(t, temp, dt, x0, pr, p0, temp0):
     sigma = [2]*len(t)
 
-    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp,
-                             p0=(0.000005, 0.08),
-                             sigma=sigma)
+    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp, p0=(0.000001, 0.08), sigma=sigma)
 
-    return para , cov
-
-def forecast(time0, t1, dt, x0, t, pr1, pr2, pr3, pr4, a, b, p0, t0):
-    '''
-    time0 = ...
-    .
-    .
-    .
-    t = array 
-        array of time values corresponding to the extrapolated pressure values
-    pr1 = array
-        array of "no change" extrapolation pressure value 
-    pr2 = array
-        array of "no production" extrapolation pressure value 
-    pr3 = array
-        array of "double production" extrapolation pressure value 
-    pr4 = array
-        array of "half production" extrapolation pressure value 
-    .
-    .
-    .
-    '''
-    # temperature forecast
-    # plotting format
-    f, ax1 = plt.subplots(nrows=1, ncols=1)
-
-    n = int(np.ceil((t1 - time0) / dt))  # number of steps
-    ts = time0 + np.arange(n + 1) * dt  # time array
-
-    p_no_change = np.interp(ts,t,pr1)
-    p_no_prod = np.interp(ts,t,pr2)
-    p_double_prod = np.interp(ts,t,pr3)
-    p_half_prod = np.interp(ts,t,pr4)
-
-    tx, t_no_change  = solve_ode(ode_model, time0, t1, dt, x0, p_no_change, pars=[a, b, p0, t0])
-    t_no_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_no_prod, pars=[a, b, p0, t0])[1]
-    t_double_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_double_prod, pars=[a, b, p0, t0])[1]
-    t_half_prod  = solve_ode(ode_model, time0, t1, dt, x0, p_half_prod, pars=[a, b, p0, t0])[1]
-
-    # plotting the different scenarios against each other
-    ln1 = ax1.plot(tx, t_no_change, 'k--o', label='maintained production')
-    ln2 = ax1.plot(tx, t_no_prod, 'r*', label='operation terminated')
-    ln3 = ax1.plot(tx, t_double_prod, 'g.', label='production doubled')
-    ln4 = ax1.plot(tx, t_half_prod, 'b-', label='production halved')
-
-    lns = ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=3)
-    ax1.set_ylabel('temperature [degC]')
-    ax1.set_xlabel('time [yr]')
-    ax1.set_title('Temperature predictions for different scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('temperature_forecast.png', dpi=300)
-
-    # rate of temperature change forecast
-    # plotting format
-    f, ax2 = plt.subplots(nrows=1, ncols=1)
-    t_pred = np.copy(tx[64:])
-    dt_no_ch = np.gradient(np.copy(t_no_change[64:]))
-    dt_st = np.gradient(np.copy(t_no_prod[64:]))
-    dt_do = np.gradient(np.copy(t_double_prod[64:]))
-    dt_ha = np.gradient(np.copy(t_half_prod[64:]))
-
-    ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
-    ln1 = ax2.plot(t_pred, dt_no_ch, 'k-', label='maintained production')
-    ln2 = ax2.plot(t_pred, dt_st, 'r-', label='operation terminated')
-    ln3 = ax2.plot(t_pred, dt_do, 'g-', label='production doubled')
-    ln4 = ax2.plot(t_pred, dt_ha, 'b-', label='production halved')
-
-    lns = ln0 + ln1 + ln2 + ln3 + ln4
-    labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc=3)
-    ax2.set_ylabel('rate of temperature change')
-    ax2.set_xlabel('time [yr]')
-    ax2.set_title('rate of temperature change predictions for different scenarios from 2014')
-
-    # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        plt.savefig('temperature_forecast_supplement.png', dpi=300)
-    return
+    return para, cov

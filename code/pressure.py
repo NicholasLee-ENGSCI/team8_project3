@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from scipy import optimize as op
 
 
-def interp(t0, t1, dt, flag):
+def interp(t0, t1, dt):
     """ Return the interpolated values of pressure for a given range of time.
 
             Parameters:
@@ -52,15 +52,15 @@ def interp(t0, t1, dt, flag):
     # Calculated using http://www.1728.org/circle2.htm, parameters {0, 297.4; 30, 296.9; 69,295} respectively
     # math.sqrt(1.1631150e+6 - (i + 2.9704) ** 2) - 781.074     for 0.5 step
     #  (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4  for 1 step?
-    if dt == 1 and flag:
+    if (dt == 1):
         for i in range(0, 34):
             water_interp[i] = math.sqrt(8.1733e+4 - (i + 2.0211) ** 2) + 11.518
 
-    #f, ax = plt.subplots(1)
-    #ax.plot(t, water_interp, 'bo', marker='o')
+    # f, ax = plt.subplots(1)
+    # ax.plot(t, water_interp, 'bo', marker='o')
 
     # Conversion of water level to pressure
-    pr = (((water_interp-296.9) * 997 * 9.81) )/100000
+    pr = ((water_interp - 297.4) * 997 * 9.81) + 5000
 
     return t, pr
 
@@ -89,22 +89,20 @@ def interpolate_q_total(t):
     # read extraction rate data
     tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
     tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # production rate 2 (gr_q2 data)
-    tqr, prr = np.genfromtxt('gr_rainfall.txt', delimiter=',', skip_header=1).T  # rainfall data (gr_rainfall data)
-    prr = (prr/365)*0.001*997*0.001 # conversion from mm/yr rainfall to tonnes/day rainfall (mm rainfall indicates mm water for every 1m^2 area, 1 mm is 0.001 m, 1 year = 365 days, density of water is 997kg/m^3, 1 kg is 0.001 tonne)
 
     # we need to decide how we calculate q and what falls in our zone, I remember something in the first few lectures
     # about this, 2D blocking maybe??
     ex1 = np.interp(t, tq1, pr1)
     ex2 = np.interp(t, tq2, pr2)
-    ex3 = np.interp(t, tqr, prr)
 
     # calculation of reinjection rate
-    ex_final = ex1 - ex3
+    ex_final = ex1
     ex_final[34:] = ex_final[34:] - 1500  # 1500 1985
     ex_final[41:] = ex_final[41:] - 3800  # 5300 1992
     ex_final[50:] = ex_final[50:] - 2200  # 7500 2001
 
-    return ex_final/86.4                    # conversion to kg/s from tons/yr
+    return ex_final / 86.4
+
 
 def analytical(t, q, a, b, c, p0):
     """
@@ -119,7 +117,7 @@ def analytical(t, q, a, b, c, p0):
     Returns:
 
     """
-    return p0 - (a * q)/b * (1 - math.exp(-b * t))
+    return p0 - (a * q) / b * (1 - math.exp(-b * t))
 
 
 def ode_model(t, pr, q, dqdt, a, b, c, p0):
@@ -297,7 +295,7 @@ def helper(t, dt, x0, indicator, a, b, c, p0):
     return solve_ode(ode_model, t0, t1, dt, x0, indicator, pars=[a, b, c, p0])[1]
 
 
-def fit(t, wp, dt, x0, p0):
+def fit(t, wp, dt, x0, p0, flag=False):
     """ A helper method for curve_fit.
 
             Parameters:
@@ -333,13 +331,20 @@ def fit(t, wp, dt, x0, p0):
             no idea about covariance atm
 
     """
-    # estimation of annual rainfall taking from ratoius2017 then converted to pressure change
-    sigma = ([0.5 * 997 * 9.81/100000]) * len(t)
-    sigma[0:64]*4
-    para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0), xdata=t,
-                             ydata=wp,
-                             p0=[0, 0, 0],
-                             bounds=((0,0, -np.inf), (0.001, np.inf, np.inf)),
-                             sigma=sigma)
+    sigma = [0.8 * 997 * 9.81] * len(t)
+
+    if (flag):
+        para, cov = op.curve_fit(lambda t, a, b, c: helper(t, dt, x0, 'SAME', a, b, c, p0),
+                                 xdata=t,
+                                 ydata=wp, p0=[0.15, 0.12, 0.6],
+                                 bounds=((0, 0, -np.inf), (np.inf, np.inf, np.inf)),
+                                 sigma=sigma)
+    else:
+        c = 0
+        para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, 'SAME', a, b, c, p0),
+                                 xdata=t,
+                                 ydata=wp, p0=[0.15, 0.12],
+                                 bounds=((0, 0), (np.inf, np.inf)),
+                                 sigma=sigma)
 
     return para, cov
