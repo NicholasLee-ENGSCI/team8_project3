@@ -17,17 +17,21 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **approximate_area.png** : the reservoir area estimation. 
 
+- **Pressure_sketch.png** : conceptual diagram of reservoir (pressure).
+
+- **Temperature_sketch.png** : conceptual diagram of reservoir (temperature). 
+
 ### Working
 
 - **pressure_validation.png** : plot of pressure benchmarking and pressure convergence analysis.
 
 ### Suitable
 
-- **initial_best_fit.png** : plot of initial pressure best fit model (cp = 0, which disregards slow drainage).
+- **first_fit.png** : plot of initial pressure best fit model (cp = 0, which disregards slow drainage).
 
-- **initial_pressure_misfit.png** : plot of initial pressure best fit model and misfit to data quantified.
+- **first_pressure_misfit.png** : plot of initial pressure best fit model and misfit to data quantified.
 
-- **initial_temperature_misfit.png** : plot of initial temperature best fit model and misfit to data quantified.
+- **first_temperature_misfit.png** : plot of initial temperature best fit model and misfit to data quantified.
 
 ### Improve
 
