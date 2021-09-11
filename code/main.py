@@ -6,11 +6,11 @@ import numpy as np
 import tests as tests
 
 # plotting the given data
+save_figure = True    # if this is true all plots will save to disk instead of print
 
-# boolean variable to run the dual plot 
-given1 = False  # plotting the water level and total production rate (with reinjection rate considered).
-given2 = False  # conversion from water level to pressure.
-given3 = False  # plotting the temperature and total production rate (with reinjection rate considered).
+given1 = True  # plotting the water level and total production rate (with reinjection rate considered).
+given2 = True  # conversion from water level to pressure.
+given3 = True  # plotting the temperature and total production rate (with reinjection rate considered).
 validation = True  # plot benchmarking and convergence test.
 firstfit = True
 bestfit = True  # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.# plot pressure and temperature forecast to time2, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
@@ -24,6 +24,7 @@ tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # product
 twl, wl = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # water level (gr_p data)
 t_given, temp_given = np.genfromtxt('gr_T.txt', delimiter=',', skip_header=1).T  # Temperature (gr_T data)
 
+np.random.seed(1)
 time0 = 1950    # starting time
 time1 = 2014    # ending time
 time2 = 2050
@@ -51,7 +52,6 @@ if given1:
     ax2.set_title('water level and total production rate data')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -83,7 +83,6 @@ if given2:
     ax2.set_title('total production rate data and calculated pressure')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -112,7 +111,6 @@ if given3:
     ax2.set_title('temperature and total production rate data')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -176,7 +174,6 @@ if firstfit:
     ax2.set_title('Best fit model for given pressure and temperature data')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -192,7 +189,7 @@ if misfit:
     fig, axes = plt.subplots(1, 2)
     ln1 = axes[0].plot(twl, p_plot, 'bo', marker='o', label='data')
     px_plot = np.interp(twl, time_fit, pressure_fit)
-    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = 7.751e+1\nbp = 1\ncp = 0')
+    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=0))
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -209,7 +206,7 @@ if misfit:
     axes[1].set_xlabel('time [yr]')
     axes[1].set_title('first fit pressure LPM ODE model')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -224,7 +221,7 @@ if misfit:
 
     ln1 = axes[0].plot(t_given, temp_given, 'bo', marker='o', label='data')
     Tx_plot = np.interp(t_given, timeT_fit, temp_fit)
-    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = 6.366e-7\nbt = 8.527e-2')
+    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:.7e}\nbt = {b:.3f}'.format(a=para_t[0], b=para_t[1]))
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -241,7 +238,7 @@ if misfit:
     axes[1].set_xlabel('time [yr]')
     axes[1].set_title('first fit temperature LPM ODE model')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -305,7 +302,6 @@ if bestfit:
 
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -321,7 +317,7 @@ if misfit:
     fig, axes = plt.subplots(1, 2)
     ln1 = axes[0].plot(twl, p_plot, 'bo', marker='o', label='data')
     px_plot = np.interp(twl, time_fit, pressure_fit)
-    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = 9.110\nbp = 1.116e-1\ncp = 6.571e+1')
+    ln2 = axes[0].plot(twl, px_plot, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=para_p[2]))
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -338,7 +334,7 @@ if misfit:
     axes[1].set_xlabel('time [yr]')
     axes[1].set_title('best fit pressure LPM ODE model')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -353,7 +349,7 @@ if misfit:
 
     ln1 = axes[0].plot(t_given, temp_given, 'bo', marker='o', label='data')
     Tx_plot = np.interp(t_given, timeT_fit, temp_fit)
-    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = 6.058e-7\nbt = 8.288e-2')
+    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:7e}\nbt = {b:.3f}'.format(a=para_t[0], b=para_t[1]))
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -370,7 +366,7 @@ if misfit:
     axes[1].set_xlabel('time [yr]')
     axes[1].set_title('best fit temperature LPM ODE model')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -428,7 +424,12 @@ if validation:
     axs[1].set_title('Pressure Convergence Analysis')
     axs[1].set_xlabel('Time step')
     axs[1].set_ylabel('Difference in final pressure value')
-    plt.show()
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig('pressure_forecast.png', dpi=300)
 
 
     ###############
@@ -450,10 +451,10 @@ if forecast:
     # plotting the different scenarios against each other
     ln5 = ax1.plot(twl, p_plot / 100000, 'ro', marker='o', label='data')
     ln0 = ax1.plot(t_forc[:65], y_same[:65] / 100000, 'k-', label='best fit model')
-    ln1 = ax1.plot(t_forc[64:], y_same[64:] / 100000, 'y-', label='maintained production')
-    ln2 = ax1.plot(t_forc[64:], y_stop[64:] / 100000, 'r-', label='operation terminated')
-    ln3 = ax1.plot(t_forc[64:], y_double[64:] / 100000, 'g-', label='production doubled')
-    ln4 = ax1.plot(t_forc[64:], y_half[64:] / 100000, 'b-', label='production halved')
+    ln1 = ax1.plot(t_forc[64:], y_same[64:] / 100000, 'k-', label='maintained production')
+    ln2 = ax1.plot(t_forc[64:], y_stop[64:] / 100000, 'g-', label='operation terminated')
+    ln3 = ax1.plot(t_forc[64:], y_double[64:] / 100000, 'r-', label='production doubled')
+    ln4 = ax1.plot(t_forc[64:], y_half[64:] / 100000, 'y-', label='production halved')
 
     lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
@@ -463,7 +464,6 @@ if forecast:
     ax1.set_title('Pressure predictions for different scenarios from 2014')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -480,9 +480,9 @@ if forecast:
 
     ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
     ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintained production')
-    ln2 = ax2.plot(t_pred, dy_st, 'r-', label='operation terminated')
-    ln3 = ax2.plot(t_pred, dy_do, 'g-', label='production doubled')
-    ln4 = ax2.plot(t_pred, dy_ha, 'b-', label='production halved')
+    ln2 = ax2.plot(t_pred, dy_st, 'g-', label='operation terminated')
+    ln3 = ax2.plot(t_pred, dy_do, 'r-', label='production doubled')
+    ln4 = ax2.plot(t_pred, dy_ha, 'y-', label='production halved')
 
     lns = ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
@@ -492,7 +492,6 @@ if forecast:
     ax2.set_title('rate of pressure change predictions for different scenarios from 2014')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -511,10 +510,10 @@ if forecast:
     # plotting the different scenarios against each other
     ln5 = ax1.plot(t_given, temp_given, 'ro', marker='o', label='data')
     ln0 = ax1.plot(tx[:65], t_no_change[:65], 'k-', label='best fit model')
-    ln1 = ax1.plot(tx[64:], t_no_change[64:], 'y-', label='maintained production')
-    ln2 = ax1.plot(tx[64:], t_no_prod[64:], 'r-', label='operation terminated')
-    ln3 = ax1.plot(tx[64:], t_double_prod[64:], 'g-', label='production doubled')
-    ln4 = ax1.plot(tx[64:], t_half_prod[64:], 'b-', label='production halved')
+    ln1 = ax1.plot(tx[64:], t_no_change[64:], 'k-', label='maintained production')
+    ln2 = ax1.plot(tx[64:], t_no_prod[64:], 'g-', label='operation terminated')
+    ln3 = ax1.plot(tx[64:], t_double_prod[64:], 'r-', label='production doubled')
+    ln4 = ax1.plot(tx[64:], t_half_prod[64:], 'y-', label='production halved')
 
     lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
@@ -524,7 +523,6 @@ if forecast:
     ax1.set_title('Temperature predictions for different scenarios from 2014')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -541,9 +539,9 @@ if forecast:
 
     ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
     ln1 = ax2.plot(t_pred, dt_no_ch, 'k-', label='maintained production')
-    ln2 = ax2.plot(t_pred, dt_st, 'r-', label='operation terminated')
-    ln3 = ax2.plot(t_pred, dt_do, 'g-', label='production doubled')
-    ln4 = ax2.plot(t_pred, dt_ha, 'b-', label='production halved')
+    ln2 = ax2.plot(t_pred, dt_st, 'g-', label='operation terminated')
+    ln3 = ax2.plot(t_pred, dt_do, 'r-', label='production doubled')
+    ln4 = ax2.plot(t_pred, dt_ha, 'y-', label='production halved')
 
     lns = ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
@@ -553,7 +551,6 @@ if forecast:
     ax2.set_title('rate of temperature change predictions for different scenarios from 2014')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -583,13 +580,13 @@ if uncertainty:
         ax.plot(temp_hold, pressure_hold / 100000, 'k-', alpha=0.2, lw=0.5, label='best fit model')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'k-', alpha=0.2, lw=0.5, label='maintained production')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'b-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='operation terminated')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='production doubled')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='production halved')
@@ -606,7 +603,7 @@ if uncertainty:
     ax.set_xlabel('time [yr]')
     ax.set_title('pressure forecast with uncertainty')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -618,20 +615,19 @@ if uncertainty:
 
     for pi in ps:
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'k-', alpha=0.2, lw=0.5, label='maintained production')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'STOP',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'b-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='operation terminated')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'DOUBLE',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='production doubled')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt, x0_p, 'HALF',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'y-', alpha=0.2, lw=0.5,
-                label='production halved')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     ax.plot(temp_hold[64:], np.zeros(len(temp_hold[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
@@ -642,7 +638,7 @@ if uncertainty:
     ax.set_xlabel('time [yr]')
     ax.set_title('rate of pressure change forecast with uncertainty')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -657,16 +653,16 @@ if uncertainty:
         ax.plot(time_hold, temp_hold, 'k-', alpha=0.2, lw=0.5, label='best fit model')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_same, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(time_hold[64:], temp_hold[64:], 'k-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_double, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'b-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_half, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     v = 1
     ax.errorbar(t_given, temp_given, yerr=v, fmt='ro', label='data')
@@ -678,7 +674,7 @@ if uncertainty:
     ax.set_xlabel('time [yr]')
     ax.set_title('temperature forecast with uncertainty')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
@@ -689,16 +685,16 @@ if uncertainty:
 
     for pi in ps:
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_same, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'y-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'k-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'r-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'g-', alpha=0.2, lw=0.5, label='operation terminated')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_double, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'b-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'r-', alpha=0.2, lw=0.5, label='production doubled')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt, x0_t, y_half, pars=[pi[0], pi[1], p0, t0])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'g-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'y-', alpha=0.2, lw=0.5, label='production halved')
 
     ax.plot(time_hold[64:], np.zeros(len(temp_hold[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
@@ -709,7 +705,7 @@ if uncertainty:
     ax.set_xlabel('time [yr]')
     ax.set_title('rate of temperature change forecast with uncertainty')
 
-    save_figure = False
+    # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
         plt.show()
     else:
