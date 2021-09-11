@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from scipy import optimize as op
 
 
-def interp(t0, t1, dt):
+def interp(t0, t1, dt, flag=True):
     """ Return the interpolated values of pressure for a given range of time.
 
             Parameters:
@@ -52,7 +52,7 @@ def interp(t0, t1, dt):
     # Calculated using http://www.1728.org/circle2.htm, parameters {0, 297.4; 30, 296.9; 69,295} respectively
     # math.sqrt(1.1631150e+6 - (i + 2.9704) ** 2) - 781.074     for 0.5 step
     #  (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4  for 1 step?
-    if (dt == 1):
+    if (dt == 1 and flag):
         for i in range(0, 34):
             water_interp[i] = math.sqrt(8.1733e+4 - (i + 2.0211) ** 2) + 11.518
 

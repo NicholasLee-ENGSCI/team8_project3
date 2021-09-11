@@ -17,12 +17,13 @@ def interp(t0, t1, dt):
 
     return t, temp_interp
 
-def analytical():
-    temp = 0
+def analytical(t, q, at, bp, T0, Tc):
+
+    return Tc + (T0 - Tc)*math.exp(-1 * (at*q/bp)*(math.exp(-bp*t) + bp*t - 1))
 
 
 
-def ode_model(t, temp, pr, a, b, p0, t0):
+def ode_model(t, temp, pr, a, b, p0, t0, tc):
     """ Return the derivative dT/dt at time, t, for given parameters.
 
         Parameters:
@@ -69,7 +70,7 @@ def ode_model(t, temp, pr, a, b, p0, t0):
     if pr > p0:
         tempx = temp
     else:
-        tempx = 10  # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
+        tempx = tc  # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
 
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as
     # inputs
@@ -129,17 +130,17 @@ def solve_ode(f, t0, t1, dt, x0, pr, pars):
     return ts, ys
 
 
-def helper(t, dt, x0, pr, a, b, p0, temp0):
+def helper(t, dt, x0, pr, a, b, p0, temp0, tempc):
 
     t0 = t[0]
     t1 = t[-1]
 
-    return solve_ode(ode_model, t0, t1, dt, x0, pr, pars=[a, b, p0, temp0])[1]
+    return solve_ode(ode_model, t0, t1, dt, x0, pr, pars=[a, b, p0, temp0, tempc])[1]
 
 
-def fit(t, temp, dt, x0, pr, p0, temp0):
+def fit(t, temp, dt, x0, pr, p0, temp0, tempc):
     sigma = [2]*len(t)
 
-    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0), xdata=t, ydata=temp, p0=(0.000001, 0.08), sigma=sigma)
+    para, cov = op.curve_fit(lambda t, a, b: helper(t, dt, x0, pr, a, b, p0, temp0, tempc), xdata=t, ydata=temp, p0=(0.000001, 0.08), sigma=sigma)
 
     return para, cov
