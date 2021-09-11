@@ -69,7 +69,7 @@ def ode_model(t, temp, pr, a, b, p0, t0):
     if pr > p0:
         tempx = temp
     else:
-        tempx = 30  # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
+        tempx = 10  # otherwise Tx is equal to temperature of the cold water injection, 30 degrees celsius.
 
     # the first derivative returns dT/dt = -at*bp*(1/ap)*(Tx-T)-bt*(T-T0) where all the parameters are provided as
     # inputs
