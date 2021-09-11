@@ -25,6 +25,8 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **pressure_validation.png** : plot of pressure benchmarking and pressure convergence analysis.
 
+- **temperature_validation.png** : plot of temperature benchmarking and temperature convergence analysis.
+
 ### Suitable
 
 - **first_fit.png** : plot of initial pressure best fit model (cp = 0, which disregards slow drainage).
