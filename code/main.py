@@ -400,7 +400,7 @@ if validation:
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
-    axs[0].legend(lns, labs, loc=4)
+    axs[0].legend(lns, labs, loc='upper right')
     axs[0].set_ylabel('x')
     axs[0].set_xlabel('t')
     axs[0].set_title('Pressure Benchmarking')
