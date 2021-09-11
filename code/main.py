@@ -2,25 +2,24 @@
 import pressure as p
 import temperature as t
 from matplotlib import pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
 import tests as tests
 
 # plotting the given data
-save_figure = True   # if this is true all plots will save to disk instead of print
+save_figure = False   # if this is true all plots will save to disk instead of print
 
-given1 = False  # plotting the water level and total production rate (with reinjection rate considered).
-given2 = False  # conversion from water level to pressure.
-given3 = False  # plotting the temperature and total production rate (with reinjection rate considered).
+given1 = True  # plotting the water level and total production rate (with reinjection rate considered).
+given2 = True  # conversion from water level to pressure.
+given3 = True  # plotting the temperature and total production rate (with reinjection rate considered).
 firstfit = True
 bestfit = True  # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.# plot pressure and temperature forecast to time2, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
 misfit = True  # plot quantified misfit of the model to data.
 validation = True  # plot benchmarking and convergence test.
-forecast = False
+forecast = True
 
-inversion = False
-uncertainty = False  # plot of pressure and temperature forecast uncertainty.
+inversion = True
+uncertainty = True  # plot of pressure and temperature forecast uncertainty.
 
 tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
 tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # production rate 2 (gr_q2 data)
