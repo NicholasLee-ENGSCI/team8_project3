@@ -3,9 +3,10 @@ import pressure as p
 import temperature as t
 from matplotlib import pyplot as plt
 import numpy as np
+import statsmodels.stats.api as sms
 
 # plotting the given data
-save_figure = False   # if this is true all plots will save to disk instead of print.
+save_figure = True   # if this is true all plots will save to disk instead of print.
 
 given1 = True       # plotting the water level and total production rate (with reinjection rate considered).
 given2 = True       # conversion from water level to pressure.
@@ -171,7 +172,7 @@ if firstfit:
 
     # print parameter values
     print("for out first model {suitable} the temperature parameters are:")
-    print("x0=", x0_t, "a=", para_t[0], " b=", para_t[1], "p0=", t0, "\n\n")
+    print("x0=", x0_t, "a=", para_t[0], " b=", para_t[1], "p0=", t0, "\n")
 
     # plotting of graphs
     lns = ln1 + ln2 + ln3 + ln4
@@ -189,6 +190,26 @@ if firstfit:
     else:
         plt.tight_layout()
         plt.savefig('first_fit.png', dpi=300)
+
+if inversion:
+    at_invers = para_p[0]*para_t[0]/para_p[1]
+    print("The parameter at from the super parameter alpha is:")
+    print(at_invers, "\n\n")
+
+
+
+    # convert parameters to correct unit
+    a = para_p[0]/100000
+    b = para_p[1]/100000
+
+    # si units
+    g = 9.81
+    area = 15e+6
+    s0 = 0.3
+
+    #print inversion result
+    #print("The estimated porosity through inverse modelling is:")
+    #print((g * (a - b*c))/((a**2) * area * (1 - s0)), "\n")
 
 if misfit:
     '''
@@ -234,7 +255,7 @@ if misfit:
     # plotting of data against model
     ln1 = axes[0].plot(t_given, temp_given, 'ro', marker='o', label='data')
     Tx_plot = np.interp(t_given, timeT_fit, temp_fit)
-    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:.3e}\nbt = {b:.3f}'.format(a=para_t[0], b=para_t[1]))
+    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:.3e}\nbt = {b:.3f}'.format(a=at_invers, b=para_t[1]))
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
     axes[0].legend(lns, labs, loc=1)
@@ -280,7 +301,7 @@ if bestfit:
     ln2 = ax1.plot(time_fit, pressure_fit / 100000, 'k-', label='pressure best fit')  # conversion from Pa to bar (1 Pa = 1.e-5 bar)
 
     # print parameter values
-    print("for out first model {suitable} the pressure ode parameters are:")
+    print("for our best model {improve} the pressure ode parameters are:")
     print("x0=", x0_p, "a=", para_p[0], " b=", para_p[1], "c=", para_p[2], "p0=", p0, "\n")
 
 
@@ -304,8 +325,8 @@ if bestfit:
     ln4 = ax2.plot(timeT_fit, temp_fit, 'r-', label='temperature best fit')
 
     # print parameter values
-    print("for out first model {suitable} the temperature parameters are:")
-    print("x0=", x0_t, "a=", para_t[0], " b=", para_t[1], "p0=", t0, "\n\n")
+    print("for our best model {improve} the temperature parameters are:")
+    print("x0=", x0_t, "a=", para_t[0], " b=", para_t[1], "p0=", t0, "\n")
 
     # plotting of graphs
     lns = ln1 + ln2 + ln3 + ln4
@@ -323,6 +344,27 @@ if bestfit:
     else:
         plt.tight_layout()
         plt.savefig('best_fit.png', dpi=300)
+
+if inversion:
+    at_invers = para_p[0] * para_t[0] / para_p[1]
+    print("The parameter at from the super parameter alpha is:")
+    print(at_invers, "\n\n")
+
+
+
+    # convert parameters to correct unit
+    a = para_p[0]/100000
+    b = para_p[1]/100000
+    c = para_p[2]/100000
+
+    # si units
+    g = 9.81
+    area = 15e+6
+    s0 = 0.3
+
+    # print inversion result
+    #print("The estimated porosity through inverse modelling is:")
+    #print((g * (a - b*c))/((a**2) * area * (1 - s0)), "\n")
 
 if misfit:
     '''
@@ -367,7 +409,7 @@ if misfit:
 
     ln1 = axes[0].plot(t_given, temp_given, 'ro', marker='o', label='data')
     Tx_plot = np.interp(t_given, timeT_fit, temp_fit)
-    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:.3e}\nbt = {b:.3f}'.format(a=para_t[0], b=para_t[1]))
+    ln2 = axes[0].plot(t_given, Tx_plot, 'k-', label='at = {a:.3e}\nbt = {b:.3f}'.format(a=at_invers, b=para_t[1]))
 
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
@@ -668,24 +710,17 @@ if forecast:
         plt.tight_layout()
         plt.savefig('temperature_forecast_supplement.png', dpi=300)
 
-if inversion:
-    # convert parameters to correct unit
-    a = para_p[0]/100000
-    b = para_p[1]/100000
-    c = para_p[2]/100000
-
-    # si units
-    g = 9.81
-    area = 15e+6
-    s0 = 0.3
-
-    # print inversion result
-    print("The estimated porosity through inverse modelling is:")
-    print((g * (a - b*c))/((a**2) * area * (1 - s0)), "\n")
-
 if uncertainty:
-    # plotting pressure forecast with uncertainty
+    ############
+    # PRESSURE #
+    ############
     fig, ax = plt.subplots(nrows=1, ncols=1)
+
+    confsame = []
+    confstop = []
+    confdouble = []
+    confhalf = []
+
 
     ps = np.random.multivariate_normal(para_p, cov_p, 100)
     for pi in ps:
@@ -694,21 +729,33 @@ if uncertainty:
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'k-', alpha=0.2, lw=0.5, label='maintained extraction')
+        confsame.append(pressure_hold[-1])
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='stop extraction')
+        confstop.append(pressure_hold[-1])
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
+        confdouble.append(pressure_hold[-1])
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='halved extraction')
+        confhalf.append(pressure_hold[-1])
 
+    print("confidence intervals pressure")
+    print("same", sms.DescrStatsW(confsame).tconfint_mean(), "\n")
+    print("stop", sms.DescrStatsW(confstop).tconfint_mean(), "\n")
+    print("double", sms.DescrStatsW(confdouble).tconfint_mean(), "\n")
+    print("half", sms.DescrStatsW(confhalf).tconfint_mean(), "\n")
+
+
+    # error bar calculation and plotting
     v = 0.01
     wl = (wl * 997 * 9.81) - 2909250 + 5000
-
     ax.errorbar(twl, wl / 100000, yerr=v, fmt='bo', label='data')
 
+    # graph formatting
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
     ax.legend(*zip(*unique))
@@ -759,9 +806,22 @@ if uncertainty:
         plt.tight_layout()
         plt.savefig('pressure_forecast_uncertainty_supplement.png', dpi=300)
 
+
+
+
+    ###############
+    # TEMPERATURE #
+    ###############
+
     # temperature forecast with uncertainty
     f, ax = plt.subplots(nrows=1, ncols=1)
 
+    confsame = []
+    confstop = []
+    confdouble = []
+    confhalf = []
+
+    # generate parameters according to covariance
     ps = np.random.multivariate_normal(para_t, cov_t, 100)
     for pi in ps:
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time1, dt_t, x0_t, y_same, pars=[pi[0], pi[1], p0, t0, tc])
@@ -769,18 +829,30 @@ if uncertainty:
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_same, pars=[pi[0], pi[1], p0, t0, tc])
         ax.plot(time_hold[64:], temp_hold[64:], 'k-', alpha=0.2, lw=0.5, label='maintained extraction')
+        confsame.append(temp_hold[-1])
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0, tc])
         ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='stop extraction')
+        confstop.append(temp_hold[-1])
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0, tc])
         ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
+        confdouble.append(temp_hold[-1])
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0, tc])
         ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='halved extraction')
+        confhalf.append(temp_hold[-1])
 
+    # plotting error bar
     v = 1
     ax.errorbar(t_given, temp_given, yerr=v, fmt='ro', label='data')
+
+    # confidence intervals
+    print("confidence intervals temperature")
+    print("same", sms.DescrStatsW(confsame).tconfint_mean(), "\n")
+    print("stop", sms.DescrStatsW(confstop).tconfint_mean(), "\n")
+    print("double", sms.DescrStatsW(confdouble).tconfint_mean(), "\n")
+    print("half", sms.DescrStatsW(confhalf).tconfint_mean(), "\n")
 
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
@@ -799,6 +871,7 @@ if uncertainty:
     # rate of temperature change forecast with uncertainty
     f, ax = plt.subplots(nrows=1, ncols=1)
 
+    # calculate temperature value for uncertainty
     for pi in ps:
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_same, pars=[pi[0], pi[1], p0, t0, tc])
         ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'k-', alpha=0.2, lw=0.5, label='maintained production')
@@ -814,6 +887,7 @@ if uncertainty:
 
     ax.plot(time_hold[64:], np.zeros(len(temp_hold[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
+    # graph formatting
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
     ax.legend(*zip(*unique))
