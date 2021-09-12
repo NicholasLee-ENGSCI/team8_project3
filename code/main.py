@@ -5,18 +5,17 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 # plotting the given data
-save_figure = False   # if this is true all plots will save to disk instead of print. 
+save_figure = True   # if this is true all plots will save to disk instead of print.
 
-given1 = True      # plotting the water level and total production rate (with reinjection rate considered).
-given2 = True      # conversion from water level to pressure.
-given3 = True      # plotting the temperature and total production rate (with reinjection rate considered).
-firstfit = True    # plot initial pressure and temperature bestfit LPM ODE models. 
+given1 = True       # plotting the water level and total production rate (with reinjection rate considered).
+given2 = True       # conversion from water level to pressure.
+given3 = True       # plotting the temperature and total production rate (with reinjection rate considered).
+firstfit = True     # plot initial pressure and temperature bestfit LPM ODE models.
 bestfit = True      # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.# plot pressure and temperature forecast to time2, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
-misfit = True      # plot quantified misfit of the model to data.
-validation = True   # plot benchmarking and convergence test.
-forecast = True     # plot of forecast. 
-
-inversion = True 
+misfit = True       # plot quantified misfit of the model to data.
+validation = True  # plot benchmarking and convergence test.
+forecast = True   # plot of forecast.
+inversion = True
 uncertainty = True # plot of pressure and temperature forecast uncertainty.
 
 # plots that are used multiple times
@@ -40,7 +39,7 @@ if given1:
     ax2 = ax1.twinx()
     ln1 = ax1.plot(tq1, p.interpolate_q_total(tq1), 'k-', label='total production rate')
     # ln2 = ax1.plot(tq2, pr2, 'b-', label='Total extraction rate 2')
-    ln3 = ax2.plot(twl, wl, 'r-', label="water level", markersize=7)
+    ln3 = ax2.plot(twl, wl, 'b-', label="water level", markersize=7)
 
     # lns = ln1+ln2+ln3 # if we want to plot rhyolite data as well
     lns = ln1 + ln3
@@ -543,10 +542,10 @@ if forecast:
     # plotting the different scenarios against each other
     ln5 = ax1.plot(twl, p_plot / 100000, 'bo', marker='o', label='data')
     ln0 = ax1.plot(t_forc[:65], y_same[:65] / 100000, 'k-', label='best fit model')
-    ln1 = ax1.plot(t_forc[64:], y_same[64:] / 100000, 'k-', label='maintain operation')
-    ln2 = ax1.plot(t_forc[64:], y_stop[64:] / 100000, 'g-', label='stop operation')
-    ln3 = ax1.plot(t_forc[64:], y_double[64:] / 100000, 'r-', label='double operation')
-    ln4 = ax1.plot(t_forc[64:], y_half[64:] / 100000, 'y-', label='halve operation')
+    ln1 = ax1.plot(t_forc[64:], y_same[64:] / 100000, 'k-', label='maintain extraction')
+    ln2 = ax1.plot(t_forc[64:], y_stop[64:] / 100000, 'g-', label='stop extraction')
+    ln3 = ax1.plot(t_forc[64:], y_double[64:] / 100000, 'r-', label='double extraction')
+    ln4 = ax1.plot(t_forc[64:], y_half[64:] / 100000, 'y-', label='halve extraction')
 
     # plotting formatting
     lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
@@ -579,10 +578,10 @@ if forecast:
 
     # plotting rate of pressure change
     ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
-    ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintain operation')
-    ln2 = ax2.plot(t_pred, dy_st, 'g-', label='stop operation')
-    ln3 = ax2.plot(t_pred, dy_do, 'r-', label='doubled operation')
-    ln4 = ax2.plot(t_pred, dy_ha, 'y-', label='halve operation')
+    ln1 = ax2.plot(t_pred, dy_no_ch, 'k-', label='maintain extraction')
+    ln2 = ax2.plot(t_pred, dy_st, 'g-', label='stop extraction')
+    ln3 = ax2.plot(t_pred, dy_do, 'r-', label='doubled extraction')
+    ln4 = ax2.plot(t_pred, dy_ha, 'y-', label='halve extraction')
 
     # plotting formatting
     lns = ln0 + ln1 + ln2 + ln3 + ln4
@@ -615,10 +614,10 @@ if forecast:
     # plotting the different scenarios against each other
     ln5 = ax1.plot(t_given, temp_given, 'ro', marker='o', label='data')
     ln0 = ax1.plot(tx[:65], t_no_change[:65], 'k-', label='best fit model')
-    ln1 = ax1.plot(tx[64:], t_no_change[64:], 'k-', label='maintain operation')
-    ln2 = ax1.plot(tx[64:], t_no_prod[64:], 'g-', label='stop operation')
-    ln3 = ax1.plot(tx[64:], t_double_prod[64:], 'r-', label='doubled operation')
-    ln4 = ax1.plot(tx[64:], t_half_prod[64:], 'y-', label='halve operation')
+    ln1 = ax1.plot(tx[64:], t_no_change[64:], 'k-', label='maintain extraction')
+    ln2 = ax1.plot(tx[64:], t_no_prod[64:], 'g-', label='stop extraction')
+    ln3 = ax1.plot(tx[64:], t_double_prod[64:], 'r-', label='doubled extraction')
+    ln4 = ax1.plot(tx[64:], t_half_prod[64:], 'y-', label='halve extraction')
 
     # plotting formatting
     lns = ln5 + ln0 + ln1 + ln2 + ln3 + ln4
@@ -649,10 +648,10 @@ if forecast:
 
     # plotting rate of temperature change
     ln0 = ax2.plot(t_pred, np.zeros(len(t_pred)), 'k--', label='recovery affected')
-    ln1 = ax2.plot(t_pred, dt_no_ch, 'k-', label='maintain operation')
-    ln2 = ax2.plot(t_pred, dt_st, 'g-', label='stop operation')
-    ln3 = ax2.plot(t_pred, dt_do, 'r-', label='doubled operation')
-    ln4 = ax2.plot(t_pred, dt_ha, 'y-', label='halve operation')
+    ln1 = ax2.plot(t_pred, dt_no_ch, 'k-', label='maintain extraction')
+    ln2 = ax2.plot(t_pred, dt_st, 'g-', label='stop extraction')
+    ln3 = ax2.plot(t_pred, dt_do, 'r-', label='doubled extraction')
+    ln4 = ax2.plot(t_pred, dt_ha, 'y-', label='halve extraction')
 
     # plotting formatting
     lns = ln0 + ln1 + ln2 + ln3 + ln4
@@ -694,16 +693,16 @@ if uncertainty:
         ax.plot(temp_hold, pressure_hold / 100000, 'k-', alpha=0.2, lw=0.5, label='best fit model')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'k-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'k-', alpha=0.2, lw=0.5, label='maintained extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'STOP', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'g-', alpha=0.2, lw=0.5, label='stop extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'DOUBLE', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='halved extraction')
 
     v = 0.03
     wl = (wl * 997 * 9.81) - 2909250 + 5000
@@ -730,19 +729,19 @@ if uncertainty:
 
     for pi in ps:
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'SAME', pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'k-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'k-', alpha=0.2, lw=0.5, label='maintained extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'STOP',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'g-', alpha=0.2, lw=0.5, label='stop extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'DOUBLE',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
 
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'HALF',
                                                pars=[pi[0], pi[1], pi[2], p0])
-        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(temp_hold[64:], np.gradient(pressure_hold[64:] / 100000), 'y-', alpha=0.2, lw=0.5, label='halved extraction')
 
     ax.plot(temp_hold[64:], np.zeros(len(temp_hold[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
@@ -769,16 +768,16 @@ if uncertainty:
         ax.plot(time_hold, temp_hold, 'k-', alpha=0.2, lw=0.5, label='best fit model')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_same, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], temp_hold[64:], 'k-', alpha=0.2, lw=0.5, label='maintained production')
+        ax.plot(time_hold[64:], temp_hold[64:], 'k-', alpha=0.2, lw=0.5, label='maintained extraction')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_hold[64:], temp_hold[64:], 'g-', alpha=0.2, lw=0.5, label='stop extraction')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_hold[64:], temp_hold[64:], 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_hold[64:], temp_hold[64:], 'y-', alpha=0.2, lw=0.5, label='halved extraction')
 
     v = 1
     ax.errorbar(t_given, temp_given, yerr=v, fmt='ro', label='data')
@@ -805,13 +804,13 @@ if uncertainty:
         ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'k-', alpha=0.2, lw=0.5, label='maintained production')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_stop, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'g-', alpha=0.2, lw=0.5, label='operation terminated')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'g-', alpha=0.2, lw=0.5, label='stop extraction')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_double, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'r-', alpha=0.2, lw=0.5, label='production doubled')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'r-', alpha=0.2, lw=0.5, label='doubled extraction')
 
         time_hold, temp_hold = t.solve_ode(t.ode_model, time0, time2, dt_t, x0_t, y_half, pars=[pi[0], pi[1], p0, t0, tc])
-        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'y-', alpha=0.2, lw=0.5, label='production halved')
+        ax.plot(time_hold[64:], np.gradient(temp_hold[64:]), 'y-', alpha=0.2, lw=0.5, label='halved extraction')
 
     ax.plot(time_hold[64:], np.zeros(len(temp_hold[64:])), 'k--', alpha=0.2, lw=0.5, label='recovery affected')
 
