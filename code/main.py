@@ -5,19 +5,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 # plotting the given data
-save_figure = False   # if this is true all plots will save to disk instead of print
+save_figure = False   # if this is true all plots will save to disk instead of print. 
 
-given1 = False      # plotting the water level and total production rate (with reinjection rate considered).
-given2 = False      # conversion from water level to pressure.
-given3 = False      # plotting the temperature and total production rate (with reinjection rate considered).
-firstfit = False    #
+given1 = True      # plotting the water level and total production rate (with reinjection rate considered).
+given2 = True      # conversion from water level to pressure.
+given3 = True      # plotting the temperature and total production rate (with reinjection rate considered).
+firstfit = True    # plot initial pressure and temperature bestfit LPM ODE models. 
 bestfit = True      # plot pressure and temperature bestfit LPM ODE models. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.# plot pressure and temperature forecast to time2, as well as respective change rate forecast. MUST REMAIN TRUE TO RUN PLOTS THAT FOLLOWS.
-misfit = False      # plot quantified misfit of the model to data.
+misfit = True      # plot quantified misfit of the model to data.
 validation = True   # plot benchmarking and convergence test.
-forecast = True     #
+forecast = True     # plot of forecast. 
 
-inversion = False   #
-uncertainty = False # plot of pressure and temperature forecast uncertainty.
+inversion = True 
+uncertainty = True # plot of pressure and temperature forecast uncertainty.
 
 # plots that are used multiple times
 tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
@@ -201,9 +201,9 @@ if misfit:
 
     # plotting of data against model
     fig, axes = plt.subplots(1, 2)
-    ln1 = axes[0].plot(twl, p_plot, 'bo', marker='o', label='data')
+    ln1 = axes[0].plot(twl, p_plot/100000, 'bo', marker='o', label='data')
     px_plot = np.interp(twl, time_fit, pressure_fit)
-    ln2 = axes[0].plot(time_fit, pressure_fit, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=0))
+    ln2 = axes[0].plot(time_fit, pressure_fit/100000, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=0))
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
     axes[0].legend(lns, labs, loc=2)
@@ -335,9 +335,9 @@ if misfit:
 
     # plotting of data against model
     fig, axes = plt.subplots(1, 2)
-    ln1 = axes[0].plot(twl, p_plot, 'bo', marker='o', label='data')
+    ln1 = axes[0].plot(twl, p_plot/100000, 'bo', marker='o', label='data')
     px_plot = np.interp(twl, time_fit, pressure_fit)
-    ln2 = axes[0].plot(time_fit, pressure_fit, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=para_p[2]))
+    ln2 = axes[0].plot(time_fit, pressure_fit/100000, 'k-', label='ap = {a:.3f}\nbp = {b:.3f}\ncp = {c:.3f}'.format(a=para_p[0], b=para_p[1], c=para_p[2]))
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
     axes[0].legend(lns, labs, loc=2)
@@ -657,7 +657,7 @@ if forecast:
     # plotting formatting
     lns = ln0 + ln1 + ln2 + ln3 + ln4
     labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc=4)
+    ax2.legend(lns, labs, loc='upper right')
     ax2.set_ylabel('temperature rate of change [degC]')
     ax2.set_xlabel('time [yr]')
     ax2.set_title('temperature rate of change: what-if scenarios')
