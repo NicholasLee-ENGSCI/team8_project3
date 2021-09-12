@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 # plotting the given data
-save_figure = True   # if this is true all plots will save to disk instead of print.
+save_figure = False   # if this is true all plots will save to disk instead of print.
 
 given1 = True       # plotting the water level and total production rate (with reinjection rate considered).
 given2 = True       # conversion from water level to pressure.
