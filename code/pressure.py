@@ -15,49 +15,36 @@ def interp(t0, t1, dt, flag=True):
                 Final time.
             dt : float
                 Time step size.
+            flag : bool
+                falg to use data approximation
 
             Returns:
             --------
             t : array-like
                 array of times
-
             pr : array-like
                 array of interpolated and converted pressure values
 
             Notes:
             ------
-            for the specfic case where dt = 1, we have approximated the uncertain data using a circle function
-
-            **I can solve for and implement a circle function for different dt values of dt we just need to decide what
-            the best value is first. difference size of dt produce different functions and coding in a circel solving function
-            given 3 points is just too much effort
-
-            Examples:
-            ---------
-            >>> pressure_ode_model(0, 1, 2, 3, 4, 5, 6, 7)
-            = -12
+            for the specfic case where dt = 1, we have approximated the uncertain data from 1950-1984 using a circle
+            function, this estimation only works for a specfic step size hence the checks.
     """
-    n = int(np.ceil((t1 - t0) / dt))  # number of steps
-    t = t0 + np.arange(n + 1) * dt  # time array
+    n = int(np.ceil((t1 - t0) / dt))    # number of steps
+    t = t0 + np.arange(n + 1) * dt      # time array
 
-    # reading water level data from text file
+    # read and interpolate water level
     time, water_level = np.genfromtxt('gr_p.txt', delimiter=',', skip_header=1).T  # water level (gr_p data)
-
-    # interpolating water level values to the correct times
     water_interp = np.interp(t, time, water_level)
 
-    # Calculation of water lvl from 1850 - 1875   **This is a bit messy for now but leave like this
+    # Calculation of water lvl from 1850 - 1875
     # Ratouis2017, figure 16, gives us historical water data
     # Can be approximated to a circle function (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4
     # Calculated using http://www.1728.org/circle2.htm, parameters {0, 297.4; 30, 296.9; 69,295} respectively
-    # math.sqrt(1.1631150e+6 - (i + 2.9704) ** 2) - 781.074     for 0.5 step
     #  (x + 2.0211)²  +  (y - 11.518)²  =  8.1733e+4  for 1 step?
     if (dt == 1 and flag):
         for i in range(0, 34):
             water_interp[i] = math.sqrt(8.1733e+4 - (i + 2.0211) ** 2) + 11.518
-
-    # f, ax = plt.subplots(1)
-    # ax.plot(t, water_interp, 'bo', marker='o')
 
     # Conversion of water level to pressure
     pr = ((water_interp - 297.4) * 997 * 9.81) + 5000
@@ -83,42 +70,46 @@ def interpolate_q_total(t):
         tq1 is the total extraction rate over the rotrua region including the rhyolite formation
         tq2 is only the rhyolite formation
 
-        there's something about the geography that were meant to realise and make an assumption
-        Read ratious2017 pg 171
+        instead of adding a new term to our ode we opted to simply minus the reinjection rate from the extraction rate
     """
     # read extraction rate data
     tq1, pr1 = np.genfromtxt('gr_q1.txt', delimiter=',', skip_header=1).T  # production rate 1 (gr_q1 data)
     tq2, pr2 = np.genfromtxt('gr_q2.txt', delimiter=',', skip_header=1).T  # production rate 2 (gr_q2 data)
 
-    tqr, prr = np.genfromtxt('gr_rainfall.txt', delimiter=',', skip_header=1).T # rainfall data 
-    #prr = (prr/365)*0.001*997*0.001 # conversion from mm/yr rainfall to tonnes/day rainfall (mm rainfall indicates mm water for every 1m^2 area, 1 mm is 0.001 m, 1 year = 365 days, density of water is 997kg/m^3, 1 kg is 0.001 tonne)
-
-    # we need to decide how we calculate q and what falls in our zone, I remember something in the first few lectures
-    # about this, 2D blocking maybe??
+    # interpolate extraction data
     ex1 = np.interp(t, tq1, pr1)
     ex2 = np.interp(t, tq2, pr2)
-    #ex3 = np.interp(t, tqr, prr)
 
-    # calculation of reinjection rate and rainfall data 
-    ex_final = ex1 #- ex3
-    ex_final[34:] = ex_final[34:] - 1500  # 1500 1985
-    ex_final[41:] = ex_final[41:] - 3800  # 5300 1992
-    ex_final[50:] = ex_final[50:] - 2200  # 7500 2001
+    # calculation of reinjection rate of water
+    ex_final = ex1
+    ex_final[34:] = ex_final[34:] - 1500  # 1500    @1985
+    ex_final[41:] = ex_final[41:] - 3800  # 5300    @1992
+    ex_final[50:] = ex_final[50:] - 2200  # 7500    @2001
 
     return ex_final / 86.4
 
 
 def analytical(t, q, a, b, c, p0):
-    """
+    """ Return the pressure value for a given time
 
     Args:
-        t:
-        ap:
-        bp:
-        cp:
-        p0:
+        t : float
+            Independent variable.
+        ap : float
+            extraction strength parameter.
+        bp : float
+            recharge strength parameter.
+        cp : float
+            slow drainage strength parameter.
+        p0 : float
+            hydrostatic pressure value of recharge source.
 
     Returns:
+        P : float
+            Pressure value for given time and parameters
+
+    Notes:
+            This function assumes a constant extraction rate therefore the slow drainage term is equal to 0
 
     """
     return p0 - (a * q) / b * (1 - math.exp(-b * t))
@@ -144,7 +135,7 @@ def ode_model(t, pr, q, dqdt, a, b, c, p0):
         c : float
             slow drainage strength parameter.
         p0 : float
-            hydrostatic pressure value of the source of reacharge.
+            hydrostatic pressure value of recharge source.
 
         Returns:
         --------
@@ -314,6 +305,8 @@ def fit(t, wp, dt, x0, p0, flag=False):
                 Initial pressure value.
             p0 : float
                 Hydrostatic pressure value of recharge source.
+            flag : bool
+                indicator whether to use slow drainage term or not.
 
             Returns:
             --------
@@ -326,13 +319,9 @@ def fit(t, wp, dt, x0, p0, flag=False):
 
             Notes:
             ------
-            This is still a very basic implementation of curve fitting, Later im going to account for unncertainty and
-            use constant parameter values to solve for the other so locking a to a specific value to solve for b
 
             the noise of the data is the how rainfall effects to the water levels which in turn effects to
-            pressure readings
-
-            no idea about covariance atm
+            pressure readings. The covariance array from curve_fit can be used to model uncertainty
 
     """
 
