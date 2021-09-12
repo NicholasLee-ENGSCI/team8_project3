@@ -39,9 +39,9 @@ Following list of files can be found in the ***code*** folder. All diagrams will
 
 - **best_fit.png** : plot of best fit pressure and temperature LPM ODE models.
 
-- **pressure_misfit.png** : plot of best fit pressure LPM ODE model and misfit to data quantified. 
+- **best_pressure_misfit.png** : plot of best fit pressure LPM ODE model and misfit to data quantified. 
 
-- **temperature_misfit.png** : plot of best fit temperature LPM ODE model and misfit to data quantified. 
+- **best_temperature_misfit.png** : plot of best fit temperature LPM ODE model and misfit to data quantified. 
 
 ### Use 
 
