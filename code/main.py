@@ -425,14 +425,14 @@ if validation:
 
     # plotting of Numerical vs Analytical solution
     fig, axs = plt.subplots(1, 2)
-    ln1 = axs[0].plot(ts, y_num_p, 'kx', label='Numerical solution')
-    ln2 = axs[0].plot(ts, y_analytic_p, 'b-', label='Analytical solution')
+    ln1 = axs[0].plot(ts, y_num_p, 'kx', label='numerical solution')
+    ln2 = axs[0].plot(ts, y_analytic_p, 'b-', label='analytical solution')
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
     axs[0].legend(lns, labs, loc='upper right')
     axs[0].set_ylabel('x')
     axs[0].set_xlabel('t')
-    axs[0].set_title('Pressure Benchmarking')
+    axs[0].set_title('pressure benchmarking')
 
     # convergence testing initialisation
     h_array = np.linspace(0.1, 2, 29)
@@ -448,13 +448,13 @@ if validation:
         t_values.append(h)
 
         # store the pressure at year 2014 in the y-array
-        p_values.append(p1[-1])
+        p_values.append(p1[-1]/100000)
 
     # plot pressure against different values of h
     axs[1].plot(t_values, p_values, 'bx')
-    axs[1].set_title('Pressure Convergence Analysis')
-    axs[1].set_xlabel('Time step')
-    axs[1].set_ylabel('Final pressure value')
+    axs[1].set_title('pressure convergence analysis')
+    axs[1].set_xlabel('time step')
+    axs[1].set_ylabel('final pressure value [bar]')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
@@ -487,14 +487,14 @@ if validation:
 
     # plotting of Numerical vs Analytical solution
     fig, axs = plt.subplots(1, 2)
-    ln1 = axs[0].plot(ts, y_num_t, 'kx', label='Numerical solution')
-    ln2 = axs[0].plot(ts, y_analytic_t, 'r-', label='Analytical solution')
+    ln1 = axs[0].plot(ts, y_num_t, 'kx', label='numerical solution')
+    ln2 = axs[0].plot(ts, y_analytic_t, 'r-', label='analytical solution')
     lns = ln1 + ln2
     labs = [l.get_label() for l in lns]
     axs[0].legend(lns, labs, loc='upper right')
     axs[0].set_ylabel('x')
     axs[0].set_xlabel('t')
-    axs[0].set_title('Temperature Benchmarking')
+    axs[0].set_title('temperature benchmarking')
 
     # convergence testing initialisation
     h_array = np.linspace(1, 15, 50)
@@ -516,9 +516,9 @@ if validation:
 
     # plot pressure against different values of h
     axs[1].plot(t_values, p_values, 'rx')
-    axs[1].set_title('Temperature Convergence Analysis')
-    axs[1].set_xlabel('Time step')
-    axs[1].set_ylabel('Final temperature value')
+    axs[1].set_title('temperature convergence analysis')
+    axs[1].set_xlabel('time step')
+    axs[1].set_ylabel('final temperature value [bar]')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
@@ -704,17 +704,17 @@ if uncertainty:
         temp_hold, pressure_hold = p.solve_ode(p.ode_model, time0, time2, dt_p, x0_p, 'HALF', pars=[pi[0], pi[1], pi[2], p0])
         ax.plot(temp_hold[64:], pressure_hold[64:] / 100000, 'y-', alpha=0.2, lw=0.5, label='halved extraction')
 
-    v = 0.03
+    v = 0.01
     wl = (wl * 997 * 9.81) - 2909250 + 5000
 
-    ax.errorbar(twl, wl / 100000, yerr=v, fmt='ro', label='data')
+    ax.errorbar(twl, wl / 100000, yerr=v, fmt='bo', label='data')
 
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
     ax.legend(*zip(*unique))
     ax.set_ylabel('pressure [bar]')
     ax.set_xlabel('time [yr]')
-    ax.set_title('pressure forecast with uncertainty')
+    ax.set_title('pressure LPM: scenario uncertainty')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
@@ -787,7 +787,7 @@ if uncertainty:
     ax.legend(*zip(*unique))
     ax.set_ylabel('temperature [degC]')
     ax.set_xlabel('time [yr]')
-    ax.set_title('temperature forecast with uncertainty')
+    ax.set_title('temperature LPM: scenario uncertainty')
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     if not save_figure:
